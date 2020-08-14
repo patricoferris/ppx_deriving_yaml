@@ -45,22 +45,16 @@ let generate_intf ~ctxt (_rec_flag, type_decls) : Ppxlib.Ast.signature_item list
   List.map
     (fun typ_decl ->
       match typ_decl with
-      | { ptype_kind = Ptype_abstract; ptype_manifest; _ } -> (
-          match ptype_manifest with
-          | Some _t ->
-              psig_value ~loc
-                (Val.mk
-                   {
-                     loc = typ_decl.ptype_name.loc;
-                     txt =
-                       mangle_name_label Helpers.suf_to typ_decl.ptype_name.txt;
-                   }
-                   (Value.type_decl_to_type
-                      ~ptype_name:(Ast_convenience.lid typ_decl.ptype_name.txt)
-                      typ_decl))
-          | None ->
-              Location.raise_errorf ~loc "Cannot derive anything for this type")
-      | { ptype_kind = Ptype_record _fields; _ } -> assert false
+      | { ptype_kind = Ptype_abstract | Ptype_record _; _ } ->
+          psig_value ~loc
+            (Val.mk
+               {
+                 loc = typ_decl.ptype_name.loc;
+                 txt = mangle_name_label Helpers.suf_to typ_decl.ptype_name.txt;
+               }
+               (Value.type_decl_to_type
+                  ~ptype_name:(Ast_convenience.lid typ_decl.ptype_name.txt)
+                  typ_decl))
       | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type")
     type_decls
 
