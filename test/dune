@@ -1,0 +1,5 @@
+(test
+ (name test)
+ (libraries alcotest yaml)
+ (preprocess
+  (pps ppx_deriving_yaml)))
