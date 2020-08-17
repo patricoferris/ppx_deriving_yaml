@@ -24,7 +24,10 @@
   (ezjsonm :with-test)
   (ocaml
    (>= 4.08.1))
-  ppxlib
+  (ppxlib
+   (>= 0.14.0))
+  (ppx_deriving
+   (>= 4.5))
   yaml))
 
 (using mdx 0.1)

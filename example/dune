@@ -1,7 +1,0 @@
-(executable
- (name main)
- (libraries yaml)
- (flags
-  (:standard -dsource))
- (preprocess
-  (pps ppx_deriving_yaml ppx_deriving_yojson)))
