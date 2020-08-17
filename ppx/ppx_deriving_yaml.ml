@@ -18,7 +18,10 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
       | { ptype_kind = Ptype_abstract; ptype_manifest; ptype_name; _ } -> (
           match ptype_manifest with
           | Some t ->
-              let yamliser = Value.type_to_expr t in
+              let yamliser =
+                Ppx_deriving.poly_fun_of_type_decl typ_decl
+                  [%expr [%e Value.type_to_expr t]]
+              in
               let label = mangle_name_label suf_to ptype_name.txt in
               [
                 pstr_value ~loc Nonrecursive
@@ -33,7 +36,8 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
               [
                 Vb.mk
                   (ppat_var ~loc { loc; txt = label })
-                  (Value.record_to_expr ~loc:ptype_loc fields);
+                  (Ppx_deriving.poly_fun_of_type_decl typ_decl
+                     (Value.record_to_expr ~loc:ptype_loc fields));
               ];
           ]
       | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type")

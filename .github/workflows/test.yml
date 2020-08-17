@@ -1,0 +1,26 @@
+name: Ppx_deriving_yaml
+on: [push]
+jobs:
+  run:
+    name: Tests
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [macos-latest, ubuntu-latest, windows-latest]
+        ocaml-version: [ '4.10.0', '4.09.0', '4.08.1' ]
+    steps:
+    - uses: actions/checkout@master
+    - uses: avsm/setup-ocaml@v1.1.0
+      with:
+        ocaml-version: ${{ matrix.ocaml-version }}
+    - run: opam pin add ppx_deriving_yaml.dev -n .
+    - name: Packages
+      run: opam depext -yt ppx_deriving_yaml
+    - name: Dependencies
+      run: opam install -t . --deps-only
+    - name: Build
+      run: opam exec -- dune build
+    - name: Install 
+      run: opam exec -- dune install
+    - name: Test
+      run: opam exec -- dune runtest

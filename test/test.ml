@@ -39,10 +39,26 @@ let test_record_list () =
   in
   Alcotest.check yaml "same object" correct test
 
+type tup = int * string * float [@@deriving yaml]
+
+let test_tuple () =
+  let correct = `A [ `Float 1.; `String "OCaml"; `Float 3.14 ] in
+  let test = tup_to_yaml (1, "OCaml", 3.14) in
+  Alcotest.check yaml "same tuple (list)" correct test
+
+type 'a pol = { txt : 'a } [@@deriving yaml]
+
+let test_simple_poly () =
+  let correct_str = `O [ ("txt", `String "arg0") ] in
+  let test_str = pol_to_yaml (fun x -> `String x) { txt = "arg0" } in
+  Alcotest.check yaml "same polymorhpic record" correct_str test_str
+
 let tests : unit Alcotest.test_case list =
   [
     ("test_primitives", `Quick, test_primitives);
     ("test_record_list", `Quick, test_record_list);
+    ("test_tuple", `Quick, test_tuple);
+    ("test_simple_poly", `Quick, test_simple_poly);
   ]
 
 let () = Alcotest.run "PPX Deriving Yaml" [ ("ppx", tests) ]

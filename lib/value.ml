@@ -26,11 +26,45 @@ let rec type_to_expr typ =
           args
       in
       [%expr fun x -> [%e fwd] x]
+  | { ptyp_desc = Ptyp_var name; _ } ->
+      let ident = Exp.ident (Ast_convenience.lid ("poly_" ^ name)) in
+      [%expr ([%e ident] : _ -> Yaml.value)]
+  | { ptyp_desc = Ptyp_poly (names, typ); _ } ->
+      polymorphic_function names (type_to_expr typ)
+  | { ptyp_desc = Ptyp_tuple typs; _ } ->
+      let arg n = "arg" ^ string_of_int n in
+      let tuple_pattern =
+        Pat.tuple
+          (List.mapi
+             (fun i t -> Pat.var { loc = t.ptyp_loc; txt = arg i })
+             typs)
+      in
+      let list_apps =
+        [%expr
+          `A
+            [%e
+              Ast_convenience.list
+                (List.mapi
+                   (fun i t ->
+                     Ast_convenience.app (type_to_expr t)
+                       [ Exp.ident (Ast_convenience.lid (arg i)) ])
+                   typs)]]
+      in
+      [%expr fun [%p tuple_pattern] -> [%e list_apps]]
   | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type"
 
 and function_app f l =
   if l = [] then f
   else Exp.apply f (List.map (fun e -> (Nolabel, e)) (List.map type_to_expr l))
+
+and polymorphic_function names expr =
+  List.fold_right
+    (fun name expr ->
+      let loc = name.Location.loc in
+      let name = name.Location.txt in
+      let arg = Pat.var { loc; txt = "poly_" ^ name } in
+      [%expr fun [%p arg] -> [%e expr]])
+    names expr
 
 let record_to_expr ~loc fields =
   let fields_to_expr fs =
