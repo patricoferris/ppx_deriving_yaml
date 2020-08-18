@@ -1,6 +1,6 @@
 (library
  (name ppx_deriving_yaml)
  (kind ppx_deriver)
- (libraries yaml ppxlib ppx_deriving_yaml_lib ppx_deriving.api)
+ (libraries yaml ppxlib ppx_deriving_yaml_lib)
  (preprocess
   (pps ppxlib.metaquot)))

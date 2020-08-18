@@ -26,8 +26,6 @@
    (>= 4.08.1))
   (ppxlib
    (>= 0.14.0))
-  (ppx_deriving
-   (>= 4.5))
   yaml
   rresult))
 

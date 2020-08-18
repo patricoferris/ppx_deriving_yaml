@@ -49,6 +49,12 @@ let test_primitives () =
 
 type person = { name : string; age : int } [@@deriving yaml]
 
+let pp_person ppf x =
+  Format.pp_print_string ppf x.name;
+  Format.pp_print_int ppf x.age
+
+let person = Alcotest.testable pp_person Stdlib.( = )
+
 type users = person list [@@deriving yaml]
 
 let test_record_list () =
@@ -62,7 +68,13 @@ let test_record_list () =
   let test =
     users_to_yaml [ { name = "Alice"; age = 20 }; { name = "Bob"; age = 21 } ]
   in
-  Alcotest.check yaml "same object" correct test
+  let correct_of : (users, [> `Msg of string ]) result =
+    Ok [ { name = "Alice"; age = 20 }; { name = "Bob"; age = 21 } ]
+  in
+  let test_of = users_of_yaml correct in
+  Alcotest.check yaml "(to_yaml) same object" correct test;
+  Alcotest.(check (result (list person) error))
+    "(of_yaml) same object" correct_of test_of
 
 type tup = int * string * float [@@deriving yaml]
 

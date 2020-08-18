@@ -20,11 +20,11 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
              match ptype_manifest with
              | Some t ->
                  let yamliser =
-                   Ppx_deriving.poly_fun_of_type_decl typ_decl
+                   Helpers.poly_fun ~loc:typ_decl.ptype_loc typ_decl
                      [%expr [%e Value.type_to_expr t]]
                  in
                  let ocamliser =
-                   Ppx_deriving.poly_fun_of_type_decl typ_decl
+                   Helpers.poly_fun ~loc:typ_decl.ptype_loc typ_decl
                      (Value.of_yaml_type_to_expr None t)
                  in
                  let to_yaml = mangle_name_label suf_to ptype_name.txt in
@@ -46,14 +46,14 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
                  [
                    Vb.mk
                      (ppat_var ~loc { loc; txt = to_yaml })
-                     (Ppx_deriving.poly_fun_of_type_decl typ_decl
+                     (Helpers.poly_fun ~loc:ptype_loc typ_decl
                         (Value.record_to_expr ~loc:ptype_loc fields));
                  ];
                pstr_value ~loc Nonrecursive
                  [
                    Vb.mk
                      (ppat_var ~loc { loc; txt = of_yaml })
-                     (Ppx_deriving.poly_fun_of_type_decl typ_decl
+                     (Helpers.poly_fun ~loc:ptype_loc typ_decl
                         (Value.of_yaml_record_to_expr ~loc:ptype_loc fields));
                  ];
              ]
@@ -75,7 +75,7 @@ let generate_intf ~ctxt (_rec_flag, type_decls) : Ppxlib.Ast.signature_item list
                  txt = mangle_name_label Helpers.suf_to typ_decl.ptype_name.txt;
                }
                (Value.type_decl_to_type
-                  ~ptype_name:(Ast_convenience.lid typ_decl.ptype_name.txt)
+                  ~ptype_name:(Located.lident ~loc typ_decl.ptype_name.txt)
                   typ_decl))
       | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type")
     type_decls

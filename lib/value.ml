@@ -22,14 +22,12 @@ let rec type_to_expr typ =
   | { ptyp_desc = Ptyp_constr ({ txt = lid; _ }, args); _ } ->
       let fwd =
         function_app
-          (Exp.ident
-             (Helpers.mkloc
-                (Ppx_deriving.mangle_lid (`Suffix Helpers.suf_to) lid)))
+          (Exp.ident (Helpers.mkloc (Helpers.mangle_suf Helpers.suf_to lid)))
           args
       in
       [%expr fun x -> [%e fwd] x]
   | { ptyp_desc = Ptyp_var name; _ } ->
-      let ident = Exp.ident (Ast_convenience.lid ("poly_" ^ name)) in
+      let ident = Exp.ident (Located.lident ~loc ("poly_" ^ name)) in
       [%expr ([%e ident] : _ -> Yaml.value)]
   | { ptyp_desc = Ptyp_poly (names, typ); _ } ->
       polymorphic_function names (type_to_expr typ)
@@ -44,11 +42,11 @@ let rec type_to_expr typ =
         [%expr
           `A
             [%e
-              Ast_convenience.list
+              Ast_builder.Default.elist ~loc
                 (List.mapi
                    (fun i t ->
-                     Ast_convenience.app (type_to_expr t)
-                       [ Exp.ident (Ast_convenience.lid (arg i)) ])
+                     Ast_builder.Default.eapply ~loc (type_to_expr t)
+                       [ Exp.ident (Located.lident ~loc (arg i)) ])
                    typs)]]
       in
       [%expr fun [%p tuple_pattern] -> [%e list_apps]]
@@ -74,7 +72,7 @@ let record_to_expr ~loc fields =
         let field =
           Exp.field
             (Ast_builder.Default.evar ~loc "x")
-            (Ast_convenience.lid pld_name.txt)
+            (Located.lident ~loc pld_name.txt)
         in
         [%expr
           [%e Ast_builder.Default.estring ~loc:pld_loc pld_name.txt],
@@ -102,8 +100,8 @@ let rec of_yaml_type_to_expr name typ =
   let loc = typ.ptyp_loc in
   let argument, expr_arg =
     match name with
-    | None -> (Pat.var { loc; txt = "x" }, Exp.ident (Ast_convenience.lid "x"))
-    | Some t -> (Pat.var { loc; txt = t }, Exp.ident (Ast_convenience.lid t))
+    | None -> (Pat.var { loc; txt = "x" }, Exp.ident (Located.lident ~loc "x"))
+    | Some t -> (Pat.var { loc; txt = t }, Exp.ident (Located.lident ~loc t))
   in
   match typ with
   | [%type: int] ->
@@ -127,13 +125,21 @@ let rec of_yaml_type_to_expr name typ =
       mk_pat_match ~loc
         [
           ( [%pat? `A lst],
-            [%expr Ok (List.map [%e of_yaml_type_to_expr None typ] lst)] );
+            [%expr
+              let open! Rresult.R.Infix in
+              [%e Helpers.map_bind ~loc] [%e of_yaml_type_to_expr None typ] lst]
+          );
         ]
   | [%type: [%t? typ] array] ->
       mk_pat_match ~loc
         [
           ( [%pat? `A lst],
-            [%expr Ok (`A Array.(to_list (map [%e type_to_expr typ])))] );
+            [%expr
+              let open! Rresult.R.Infix in
+              `A
+                Array.(
+                  to_list ([%e Helpers.map_bind ~loc] [%e type_to_expr typ]))]
+          );
         ]
   | [%type: Yaml.value] -> [%expr fun x -> Ok x]
   | [%type: [%t? typ] option] ->
@@ -145,14 +151,12 @@ let rec of_yaml_type_to_expr name typ =
   | { ptyp_desc = Ptyp_constr ({ txt = lid; _ }, args); _ } ->
       let fwd =
         function_appl
-          (Exp.ident
-             (Helpers.mkloc
-                (Ppx_deriving.mangle_lid (`Suffix Helpers.suf_of) lid)))
+          (Exp.ident (Helpers.mkloc (Helpers.mangle_suf Helpers.suf_of lid)))
           args
       in
-      [%expr fun x -> Ok ([%e fwd] x)]
+      [%expr fun x -> [%e fwd] x]
   | { ptyp_desc = Ptyp_var name; _ } ->
-      let ident = Exp.ident (Ast_convenience.lid ("poly_" ^ name)) in
+      let ident = Exp.ident (Located.lident ~loc ("poly_" ^ name)) in
       [%expr ([%e ident] : Yaml.value -> _)]
   | { ptyp_desc = Ptyp_poly (names, typ); _ } ->
       polymorphic_function names (of_yaml_type_to_expr None typ)
@@ -206,8 +210,7 @@ let of_yaml_record_to_expr ~loc fields =
     List.fold_left (fun expr i ->
         let loc = expr.pexp_loc in
         [%expr
-          [%e Ast_convenience.evar (arg i)]
-          >>= fun [%p Ast_convenience.pvar (arg i)] -> [%e expr]])
+          [%e evar ~loc (arg i)] >>= fun [%p pvar ~loc (arg i)] -> [%e expr]])
   in
   let record =
     [%expr
@@ -216,8 +219,7 @@ let of_yaml_record_to_expr ~loc fields =
           Exp.record
             (List.mapi
                (fun i f ->
-                 ( Ast_convenience.lid ~loc:f.pld_name.loc f.pld_name.txt,
-                   Ast_convenience.evar (arg i) ))
+                 (Located.lident ~loc f.pld_name.txt, evar ~loc (arg i)))
                fields)
             None]]
   in
@@ -229,16 +231,15 @@ let of_yaml_record_to_expr ~loc fields =
           List.mapi
             (fun j _ ->
               if i = j then
-                Ast_convenience.(
-                  app
-                    (of_yaml_type_to_expr None f.pld_type)
-                    [ Ast_convenience.evar "x" ])
-              else Ast_convenience.evar (arg j))
+                eapply ~loc
+                  (of_yaml_type_to_expr None f.pld_type)
+                  [ evar ~loc "x" ]
+              else evar ~loc (arg j))
             fields
         in
         Exp.case
-          [%pat? ([%p Ast_convenience.pstr f.pld_name.txt], x) :: xs]
-          [%expr loop xs [%e Ast_convenience.tuple funcs]])
+          [%pat? ([%p pstring ~loc f.pld_name.txt], x) :: xs]
+          [%expr loop xs [%e Helpers.etuple ~loc funcs]])
       fields
   in
   let kv_cases =
@@ -254,14 +255,14 @@ let of_yaml_record_to_expr ~loc fields =
       | `O xs ->
           let rec loop xs
               ([%p
-                 Ast_convenience.(
-                   ptuple (List.mapi (fun i _ -> pvar (arg i)) fields))] as
-              _state) =
+                 Helpers.ptuple ~loc
+                   (List.mapi (fun i _ -> pvar ~loc (arg i)) fields)] as _state)
+              =
             [%e Exp.match_ [%expr xs] kv_cases]
           in
           loop xs
             [%e
-              Ast_convenience.tuple
+              Helpers.etuple ~loc
                 (List.map
                    (fun _ ->
                      [%expr Error (`Msg "Didn't find the function for key")])
