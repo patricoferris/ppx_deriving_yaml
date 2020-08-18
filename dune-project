@@ -28,6 +28,7 @@
    (>= 0.14.0))
   (ppx_deriving
    (>= 4.5))
-  yaml))
+  yaml
+  rresult))
 
 (using mdx 0.1)
