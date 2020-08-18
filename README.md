@@ -14,11 +14,40 @@ For converting OCaml types to Yaml types `ppx_deriving_yaml` will do the convent
 
 `of_yaml` produces OCaml types wrapped in a `Rresult.R.t` -- this is how ocaml-yaml also handles errors i.e. not using exceptions. Based on your type this should let you move between yaml and OCaml types.
 
+Here is a small example. 
+
+```ocaml
+type person = { name : string; age : int } [@@deriving yaml]
+type users = person list [@@deriving yaml]
+```
+
+This will produce four functions. 
+
+```ocaml
+val person_to_yaml : person -> Yaml.value 
+val person_of_yaml : Yaml.value -> (person, [> `Msg of string ]) result 
+val users_to_yaml : users -> Yaml.value 
+val users_of_yaml : Yaml.value -> (users, [> `Msg of string ]) result 
+```
+
+If you make polymorphic types, then you will have to supply the function to convert the unknown to a yaml value. For example: 
+
+```ocaml
+type 'a note = { txt = 'a } [@@deriving yaml]
+```
+
+produces the following function. 
+
+```ocaml
+val note_to_yaml : ('a -> Yaml.value) -> 'a note -> [> `O of (string * Yaml.value) list ]
+```
+
 ### Checklist 
 
 - [x] Simples types (`int, list, records...`) to `Yaml.value` types
 - [x] `Yaml.value` interface types 
 - [x] `Yaml.value` types to OCaml types i.e. `of_yaml` 
 - [x] More complex types (parametrics polymorphic ones) to any of the Yaml types 
+- [ ] Design and implement how variants should be handled
 - [ ] Better interface support i.e. `.mli` files 
 - [ ] Simple types (`int, list, records...`) to `Yaml.yaml` types
