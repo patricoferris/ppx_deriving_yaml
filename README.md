@@ -33,7 +33,7 @@ val users_of_yaml : Yaml.value -> (users, [> `Msg of string ]) result
 If you make polymorphic types, then you will have to supply the function to convert the unknown to a yaml value. For example: 
 
 ```ocaml
-type 'a note = { txt = 'a } [@@deriving yaml]
+type 'a note = { txt : 'a } [@@deriving yaml]
 ```
 
 produces the following function. 
