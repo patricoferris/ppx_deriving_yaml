@@ -82,10 +82,19 @@ let record_to_expr ~loc fields =
   let fs = fields_to_expr fields in
   [%expr fun x -> `O [%e Ast_builder.Default.elist ~loc fs]]
 
-let type_decl_to_type ~ptype_name type_decl =
+let type_decl_to_type type_decl =
   let loc = type_decl.ptype_loc in
-  let t = ptyp_constr ~loc ptype_name [] in
-  [%type: [%t t] -> Yaml.value]
+  let t = core_type_of_type_declaration type_decl in
+  List.fold_right
+    (fun (param, _) typ ->
+      match param.ptyp_desc with
+      | Ptyp_any -> typ
+      | Ptyp_var name ->
+          let loc = param.ptyp_loc in
+          let arg = Typ.var ~loc name in
+          [%type: ([%t arg] -> Yaml.value) -> [%t typ]]
+      | _ -> assert false)
+    type_decl.ptype_params [%type: [%t t] -> Yaml.value]
 
 let wrap_open_rresult ~loc expr =
   [%expr

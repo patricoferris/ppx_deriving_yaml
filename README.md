@@ -47,7 +47,7 @@ val note_to_yaml : ('a -> Yaml.value) -> 'a note -> [> `O of (string * Yaml.valu
 - [x] Simples types (`int, list, records...`) to `Yaml.value` types
 - [x] `Yaml.value` interface types 
 - [x] `Yaml.value` types to OCaml types i.e. `of_yaml` 
-- [x] More complex types (parametrics polymorphic ones) to any of the Yaml types 
+- [x] More complex types (parametric polymorphic ones) to any of the Yaml types 
 - [ ] Design and implement how variants should be handled
 - [ ] Better interface support i.e. `.mli` files 
 - [ ] Simple types (`int, list, records...`) to `Yaml.yaml` types

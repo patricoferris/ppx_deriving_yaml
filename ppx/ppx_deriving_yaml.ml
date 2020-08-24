@@ -74,9 +74,7 @@ let generate_intf ~ctxt (_rec_flag, type_decls) : Ppxlib.Ast.signature_item list
                  loc = typ_decl.ptype_name.loc;
                  txt = mangle_name_label Helpers.suf_to typ_decl.ptype_name.txt;
                }
-               (Value.type_decl_to_type
-                  ~ptype_name:(Located.lident ~loc typ_decl.ptype_name.txt)
-                  typ_decl))
+               (Value.type_decl_to_type typ_decl))
       | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type")
     type_decls
 
