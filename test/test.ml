@@ -78,10 +78,21 @@ let test_record_list () =
 
 type tup = int * string * float [@@deriving yaml]
 
+let tup =
+  Alcotest.testable
+    (fun ppf (a, b, c) ->
+      Format.pp_print_int ppf a;
+      Format.pp_print_string ppf b;
+      Format.pp_print_float ppf c)
+    Stdlib.( = )
+
 let test_tuple () =
   let correct = `A [ `Float 1.; `String "OCaml"; `Float 3.14 ] in
   let test = tup_to_yaml (1, "OCaml", 3.14) in
-  Alcotest.check yaml "same tuple (list)" correct test
+  let correct_of = Ok (1, "OCaml", 3.14) in
+  let test_of = tup_of_yaml correct in
+  Alcotest.check yaml "same tuple (list)" correct test;
+  Alcotest.(check (result tup error)) "(of_yaml) same tuple" correct_of test_of
 
 type 'a pol = { txt : 'a } [@@deriving yaml]
 

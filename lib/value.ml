@@ -178,17 +178,25 @@ let rec of_yaml_type_to_expr name typ =
                    (fun i t -> Pat.var { loc = t.ptyp_loc; txt = arg i })
                    typs)]]
       in
-      let tup =
-        [%expr
-          Ok
-            [%e
-              Exp.tuple
-                (List.mapi
-                   (fun i t ->
-                     [%expr [%e of_yaml_type_to_expr (Some (arg i)) t]])
-                   typs)]]
+      let funcs =
+        List.mapi
+          (fun i t -> (i, [%expr [%e of_yaml_type_to_expr (Some (arg i)) t]]))
+          typs
       in
-      mk_pat_match ~loc [ (list_pat, tup) ]
+      let expr =
+        List.fold_left
+          (fun acc (i, t) ->
+            [%expr
+              [%e t] [%e evar ~loc (arg i)] >>= fun [%p pvar ~loc (arg i)] ->
+              [%e acc]])
+          [%expr
+            Result.Ok
+              [%e
+                Helpers.etuple ~loc
+                  (List.mapi (fun i _ -> evar ~loc (arg i)) typs)]]
+          funcs
+      in
+      wrap_open_rresult ~loc (mk_pat_match ~loc [ (list_pat, expr) ])
   | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type"
 
 and function_appl f l =
