@@ -47,7 +47,9 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
                    Vb.mk
                      (ppat_var ~loc { loc; txt = to_yaml })
                      (Helpers.poly_fun ~loc:ptype_loc typ_decl
-                        (Value.record_to_expr ~loc:ptype_loc fields));
+                        (Value.record_to_expr
+                           ~typ:(core_type_of_type_declaration typ_decl)
+                           ~loc:ptype_loc fields));
                  ];
                pstr_value ~loc Nonrecursive
                  [

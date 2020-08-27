@@ -7,11 +7,11 @@ let arg n = "arg" ^ string_of_int n
 let rec type_to_expr typ =
   let loc = typ.ptyp_loc in
   match typ with
-  | [%type: int] -> [%expr fun x -> `Float (float_of_int x)]
-  | [%type: float] -> [%expr fun x -> `Float x]
-  | [%type: string] -> [%expr fun x -> `String x]
-  | [%type: bool] -> [%expr fun x -> `Bool x]
-  | [%type: char] -> [%expr fun x -> `String (String.make 1 x)]
+  | [%type: int] -> [%expr fun (x : int) -> `Float (float_of_int x)]
+  | [%type: float] -> [%expr fun (x : float) -> `Float x]
+  | [%type: string] -> [%expr fun (x : string) -> `String x]
+  | [%type: bool] -> [%expr fun (x : bool) -> `Bool x]
+  | [%type: char] -> [%expr fun (x : char) -> `String (String.make 1 x)]
   | [%type: [%t? typ] list] ->
       [%expr fun x -> `A (List.map [%e type_to_expr typ] x)]
   | [%type: [%t? typ] array] ->
@@ -65,7 +65,7 @@ and polymorphic_function names expr =
       [%expr fun [%p arg] -> [%e expr]])
     names expr
 
-let record_to_expr ~loc fields =
+let record_to_expr ~typ ~loc fields =
   let fields_to_expr fs =
     List.map
       (fun { pld_name; pld_type; pld_loc; _ } ->
@@ -80,7 +80,7 @@ let record_to_expr ~loc fields =
       fs
   in
   let fs = fields_to_expr fields in
-  [%expr fun x -> `O [%e Ast_builder.Default.elist ~loc fs]]
+  [%expr fun (x : [%t typ]) -> `O [%e Ast_builder.Default.elist ~loc fs]]
 
 let type_decl_to_type type_decl =
   let loc = type_decl.ptype_loc in
@@ -152,11 +152,10 @@ let rec of_yaml_type_to_expr name typ =
         ]
   | [%type: Yaml.value] -> [%expr fun x -> Ok x]
   | [%type: [%t? typ] option] ->
-      mk_pat_match ~loc
-        [
-          ([%pat? None], [%expr Ok `Null]);
-          ([%pat? Some t], [%expr Ok [%e of_yaml_type_to_expr None typ]]);
-        ]
+      [%expr
+        function
+        | `Null -> Ok None
+        | x -> [%e of_yaml_type_to_expr None typ] x >>= fun x -> Ok (Some x)]
   | { ptyp_desc = Ptyp_constr ({ txt = lid; _ }, args); _ } ->
       let fwd =
         function_appl

@@ -3,7 +3,8 @@ open Ppxlib
 
 val type_to_expr : core_type -> expression
 
-val record_to_expr : loc:Location.t -> label_declaration list -> expression
+val record_to_expr :
+  typ:core_type -> loc:Location.t -> label_declaration list -> expression
 
 val type_decl_to_type : type_declaration -> core_type
 
