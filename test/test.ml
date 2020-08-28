@@ -55,25 +55,35 @@ let pp_person ppf x =
 
 let person = Alcotest.testable pp_person Stdlib.( = )
 
-type users = person list [@@deriving yaml]
+type users = { db : person list } [@@deriving yaml]
+
+let users =
+  Alcotest.testable
+    (fun ppf users -> List.iter (pp_person ppf) users.db)
+    Stdlib.( = )
 
 let test_record_list () =
   let correct =
-    `A
+    `O
       [
-        `O [ ("name", `String "Alice"); ("age", `Float 20.) ];
-        `O [ ("name", `String "Bob"); ("age", `Float 21.) ];
+        ( "db",
+          `A
+            [
+              `O [ ("name", `String "Alice"); ("age", `Float 20.) ];
+              `O [ ("name", `String "Bob"); ("age", `Float 21.) ];
+            ] );
       ]
   in
   let test =
-    users_to_yaml [ { name = "Alice"; age = 20 }; { name = "Bob"; age = 21 } ]
+    users_to_yaml
+      { db = [ { name = "Alice"; age = 20 }; { name = "Bob"; age = 21 } ] }
   in
   let correct_of : (users, [> `Msg of string ]) result =
-    Ok [ { name = "Alice"; age = 20 }; { name = "Bob"; age = 21 } ]
+    Ok { db = [ { name = "Alice"; age = 20 }; { name = "Bob"; age = 21 } ] }
   in
   let test_of = users_of_yaml correct in
   Alcotest.check yaml "(to_yaml) same object" correct test;
-  Alcotest.(check (result (list person) error))
+  Alcotest.(check (result users error))
     "(of_yaml) same object" correct_of test_of
 
 type tup = int * string * float [@@deriving yaml]
