@@ -262,8 +262,21 @@ let of_yaml_record_to_expr ~loc fields =
     kv_cases
     @ [
         Exp.case [%pat? []] base_case;
-        Exp.case [%pat? _] [%expr Error (`Msg "Couldn't make record")];
+        Exp.case
+          [%pat? (x, y) :: _]
+          [%expr Error (`Msg (x ^ Yaml.to_string_exn y))];
       ]
+  in
+  let option_to_none t =
+    match t.pld_type with
+    | [%type: [%t? _] option] -> [%expr Ok None]
+    | _ ->
+        [%expr
+          Error
+            (`Msg
+              [%e
+                estring ~loc
+                  ("Didn't find the function for key: " ^ t.pld_name.txt)])]
   in
   let e =
     [%expr
@@ -278,11 +291,7 @@ let of_yaml_record_to_expr ~loc fields =
           in
           loop xs
             [%e
-              Helpers.etuple ~loc
-                (List.map
-                   (fun _ ->
-                     [%expr Error (`Msg "Didn't find the function for key")])
-                   fields)]
+              Helpers.etuple ~loc (List.map (fun f -> option_to_none f) fields)]
       | _ -> Error (`Msg "Failed building a key-value object expecting a list")]
   in
   wrap_open_rresult ~loc e

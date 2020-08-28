@@ -42,6 +42,10 @@ produces the following function.
 val note_to_yaml : ('a -> Yaml.value) -> 'a note -> [> `O of (string * Yaml.value) list ]
 ```
 
+### Implementation Details 
+
+One important thing is that `'a option` values within records will return `None` if the Yaml you are trying to convert does not exist.
+
 ### Checklist 
 
 - [x] Simples types (`int, list, records...`) to `Yaml.value` types
