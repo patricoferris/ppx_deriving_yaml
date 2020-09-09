@@ -146,12 +146,37 @@ let test_option () =
   Alcotest.(check (result str_opt error))
     "(of_yaml) same string option (none)" correct_opt_none_of test_opt_none_of
 
+type poly_var = [ `Alpha | `Beta of int * string ] [@@deriving yaml]
+
+let poly_var =
+  Alcotest.testable
+    (fun ppf -> function `Alpha -> Fmt.pf ppf "Alpha"
+      | `Beta (i, s) -> Fmt.pf ppf "Beta (%i, %s)" i s)
+    Stdlib.( = )
+
+let test_poly_variants () =
+  let correct_yaml_a = `O [ ("Alpha", `A []) ] in
+  let test_yaml_a = poly_var_to_yaml `Alpha in
+  let correct_yaml_b = `O [ ("Beta", `A [ `Float 3.; `String "hello" ]) ] in
+  let test_yaml_b = poly_var_to_yaml (`Beta (3, "hello")) in
+  let correct_yaml_a_of = Ok `Alpha in
+  let test_yaml_a_of = poly_var_of_yaml correct_yaml_a in
+  let correct_yaml_b_of = Ok (`Beta (3, "hello")) in
+  let test_yaml_b_of = poly_var_of_yaml correct_yaml_b in
+  Alcotest.check yaml "same polymorphic variant" correct_yaml_a test_yaml_a;
+  Alcotest.check yaml "same polymorphic variant" correct_yaml_b test_yaml_b;
+  Alcotest.(check (result poly_var error))
+    "(of_yaml) same polymorphic variant" correct_yaml_a_of test_yaml_a_of;
+  Alcotest.(check (result poly_var error))
+    "(of_yaml) same polymorphic variant" correct_yaml_b_of test_yaml_b_of
+
 let tests : unit Alcotest.test_case list =
   [
     ("test_primitives", `Quick, test_primitives);
     ("test_record_list", `Quick, test_record_list);
     ("test_tuple", `Quick, test_tuple);
     ("test_simple_poly", `Quick, test_simple_poly);
+    ("test_poly_variants", `Quick, test_poly_variants);
   ]
 
-let () = Alcotest.run "PPX Deriving Yaml" [ ("ppx", tests) ]
+let () = Alcotest.run "PPX_Deriving_Yaml" [ ("ppx", tests) ]
