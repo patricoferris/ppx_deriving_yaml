@@ -46,6 +46,18 @@ val note_to_yaml : ('a -> Yaml.value) -> 'a note -> [> `O of (string * Yaml.valu
 
 One important thing is that `'a option` values within records will return `None` if the Yaml you are trying to convert does not exist.
 
+|            OCaml Type            |            Yaml Type            |
+|:--------------------------------:|:-------------------------------:|
+|               `int`              |           `` `Float ``          |
+|              `float`             |           `` `Float ``          |
+|             `string`             |          `` `String ``          |
+|              `bool`              |           `` `Bool ``           |
+|              `None`              |           `` `Null ``           |
+|              `list`              |            `` `A []``           |
+|              `array`             |            `` `A []``           |
+| `record` e.g `{ name : string }` |  `` `O [("name", `String s)] `` |
+|  `A of int` or `` [`A of int]``  | `` `O [("A", `A [`Float f])] `` |
+
 ### Checklist 
 
 - [x] Simples types (`int, list, records...`) to `Yaml.value` types
