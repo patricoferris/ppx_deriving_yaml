@@ -2,7 +2,7 @@ open Ppxlib
 open Ast_helper
 open Ast_builder.Default
 
-let arg n = "arg" ^ string_of_int n
+let arg = Helpers.arg
 
 let rec type_to_expr typ =
   let loc = typ.ptyp_loc in
@@ -50,6 +50,45 @@ let rec type_to_expr typ =
                    typs)]]
       in
       [%expr fun [%p tuple_pattern] -> [%e list_apps]]
+  | { ptyp_desc = Ptyp_variant (row_fields, _, _); _ } ->
+      let cases =
+        List.map
+          (fun (field : row_field) ->
+            match field.prf_desc with
+            | Rtag (label, true, []) ->
+                Exp.case
+                  (Pat.variant label.txt None)
+                  [%expr `O [ ([%e estring ~loc label.txt], `A []) ]]
+            | Rtag (label, false, [ { ptyp_desc = Ptyp_tuple typs; _ } ]) ->
+                Exp.case
+                  (Pat.variant label.txt
+                     (Some
+                        (Helpers.ptuple ~loc
+                           (List.mapi (fun i _ -> pvar ~loc (arg i)) typs))))
+                  [%expr
+                    `O
+                      [
+                        ( [%e estring ~loc label.txt],
+                          `A
+                            [%e
+                              elist ~loc
+                                (List.mapi
+                                   (fun i t ->
+                                     [%expr
+                                       [%e type_to_expr t]
+                                         [%e evar ~loc (arg i)]])
+                                   typs)] );
+                      ]]
+            | Rtag (label, false, [ t ]) ->
+                Exp.case
+                  (Pat.variant ~loc label.txt (Some (pvar ~loc "x")))
+                  [%expr
+                    [%e type_to_expr t] [%e evar ~loc "x"] |> fun x ->
+                    `O [ ([%e estring ~loc label.txt], `A [ x ]) ]]
+            | _ -> failwith "Not implemented")
+          row_fields
+      in
+      Exp.function_ ~loc cases
   | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type"
 
 and function_app f l =
@@ -104,6 +143,13 @@ let wrap_open_rresult ~loc expr =
 let mk_pat_match ~loc cases =
   let cases = cases @ [ ([%pat? _], [%expr Error (`Msg "err")]) ] in
   Exp.function_ (List.map (fun (pat, exp) -> Exp.case pat exp) cases)
+
+let monad_fold f =
+  List.fold_left (fun expr (t, i) ->
+      let loc = expr.pexp_loc in
+      [%expr
+        [%e f t] [%e evar ~loc (arg i)] >>= fun [%p pvar ~loc (arg i)] ->
+        [%e expr]])
 
 let rec of_yaml_type_to_expr name typ =
   let loc = typ.ptyp_loc in
@@ -197,6 +243,59 @@ let rec of_yaml_type_to_expr name typ =
           funcs
       in
       wrap_open_rresult ~loc (mk_pat_match ~loc [ (list_pat, expr) ])
+  | { ptyp_desc = Ptyp_variant (row_fields, _, _); _ } ->
+      let cases =
+        List.map
+          (fun field ->
+            match field.prf_desc with
+            | Rtag (name, true, []) ->
+                Exp.case
+                  [%pat? `O [ ([%p pstring ~loc name.txt], `A []) ]]
+                  [%expr Result.Ok [%e Exp.variant name.txt None]]
+            | Rtag (name, false, [ { ptyp_desc = Ptyp_tuple typs; _ } ]) ->
+                let e =
+                  monad_fold
+                    (of_yaml_type_to_expr None)
+                    [%expr
+                      Result.Ok
+                        [%e
+                          Exp.variant name.txt
+                            (Some
+                               (Helpers.etuple ~loc
+                                  (List.mapi
+                                     (fun i _ -> evar ~loc (arg i))
+                                     typs)))]]
+                    (List.mapi (fun i t -> (t, i)) typs)
+                in
+                Exp.case
+                  [%pat?
+                    `O
+                      [
+                        ( [%p pstring ~loc name.txt],
+                          `A
+                            [%p
+                              plist ~loc
+                                (List.mapi (fun i _ -> pvar ~loc (arg i)) typs)]
+                        );
+                      ]]
+                  e
+            | Rtag (name, false, [ t ]) ->
+                Exp.case
+                  [%pat? `O [ ([%p pstring ~loc name.txt], `A [ x ]) ]]
+                  [%expr
+                    [%e of_yaml_type_to_expr None t] x >>= fun x ->
+                    Result.Ok [%e Exp.variant name.txt (Some (evar ~loc "x"))]]
+            | _ -> Exp.case [%pat? _] [%expr Error (`Msg "Not implemented")])
+          row_fields
+      in
+      wrap_open_rresult ~loc
+        (Exp.function_ ~loc
+           (cases
+           @ [
+               Exp.case
+                 [%pat? _]
+                 [%expr Error (`Msg "failed converting variant")];
+             ]))
   | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type"
 
 and function_appl f l =

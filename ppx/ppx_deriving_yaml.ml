@@ -38,6 +38,101 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
              | None ->
                  Location.raise_errorf ~loc
                    "Cannot derive anything for this type")
+         | { ptype_kind = Ptype_variant constructors; ptype_name; _ } ->
+             let to_yaml = mangle_name_label suf_to ptype_name.txt in
+             let of_yaml = mangle_name_label suf_of ptype_name.txt in
+             let to_yaml_cases =
+               List.map
+                 (fun ({ pcd_name; pcd_args; _ } as p) ->
+                   match pcd_args with
+                   | Pcstr_tuple args ->
+                       let pat_arg =
+                         if List.length args = 0 then None
+                         else
+                           Some
+                             (Helpers.ptuple ~loc
+                                (List.mapi
+                                   (fun i _ -> pvar ~loc (Helpers.arg i))
+                                   args))
+                       in
+                       Exp.case (pconstruct p pat_arg)
+                         [%expr
+                           `O
+                             [
+                               ( [%e estring ~loc pcd_name.txt],
+                                 `A
+                                   [%e
+                                     elist ~loc
+                                       (List.mapi
+                                          (fun i t ->
+                                            [%expr
+                                              [%e Value.type_to_expr t]
+                                                [%e evar ~loc (Helpers.arg i)]])
+                                          args)] );
+                             ]]
+                   | _ -> failwith "Not implemented!")
+                 constructors
+             in
+             let to_yaml_expr = Exp.function_ ~loc to_yaml_cases in
+             let of_yaml_cases =
+               List.map
+                 (fun { pcd_name; pcd_args; _ } ->
+                   match pcd_args with
+                   | Pcstr_tuple args ->
+                       let tuple =
+                         if List.length args = 0 then None
+                         else
+                           Some
+                             (Helpers.etuple ~loc
+                                (List.mapi
+                                   (fun i _ -> evar ~loc (Helpers.arg i))
+                                   args))
+                       in
+                       Exp.case
+                         [%pat?
+                           `O
+                             [
+                               ( [%p pstring ~loc pcd_name.txt],
+                                 `A
+                                   [%p
+                                     plist ~loc
+                                       (List.mapi
+                                          (fun i _ -> pvar ~loc (Helpers.arg i))
+                                          args)] );
+                             ]]
+                         Value.(
+                           monad_fold
+                             (of_yaml_type_to_expr None)
+                             [%expr
+                               Result.Ok
+                                 [%e
+                                   Exp.construct
+                                     {
+                                       txt = Lident pcd_name.txt;
+                                       loc = pcd_name.loc;
+                                     }
+                                     tuple]]
+                             (List.mapi (fun i t -> (t, i)) args))
+                   | _ -> failwith "Not implemented!")
+                 constructors
+             in
+             let of_yaml_cases =
+               of_yaml_cases
+               @ [
+                   Exp.case
+                     [%pat? _]
+                     [%expr Error (`Msg "no match for this variant expression")];
+                 ]
+             in
+             let of_yaml_expr =
+               Value.wrap_open_rresult ~loc (Exp.function_ ~loc of_yaml_cases)
+             in
+             [
+               pstr_value ~loc Nonrecursive
+                 [ Vb.mk (ppat_var ~loc { loc; txt = to_yaml }) to_yaml_expr ];
+               pstr_value ~loc Nonrecursive
+                 [ Vb.mk (ppat_var ~loc { loc; txt = of_yaml }) of_yaml_expr ];
+             ]
          | { ptype_kind = Ptype_record fields; ptype_loc; ptype_name; _ } ->
              let to_yaml = mangle_name_label suf_to ptype_name.txt in
              let of_yaml = mangle_name_label suf_of ptype_name.txt in

@@ -1,6 +1,6 @@
 ## Ppx_deriving_yaml -- OCaml types to YAML types 
 
-This ppx is based on [ppx_yojson](https://github.com/NathanReb/ppx_yojson) and [ppx_deriving_yojson](https://github.com/ocaml-ppx/ppx_deriving_yojson) because of the many similarities between json and yaml.
+This ppx is based on [ppx_yojson](https://github.com/NathanReb/ppx_yojson) and [ppx_deriving_yojson](https://github.com/ocaml-ppx/ppx_deriving_yojson) because of the many similarities between json and yaml. In particular many of the semantics of OCaml types <-> Yaml types are the same as those implemented by the Yojson ppx.
 
 This is a small ppx deriver that lets you convert your OCaml types to [yaml](https://github.com/avsm/ocaml-yaml) ones. This means you can describe yaml structures in OCaml and easily convert them to yaml.
 
@@ -52,6 +52,6 @@ One important thing is that `'a option` values within records will return `None`
 - [x] `Yaml.value` interface types 
 - [x] `Yaml.value` types to OCaml types i.e. `of_yaml` 
 - [x] More complex types (parametric polymorphic ones) to any of the Yaml types 
-- [ ] Design and implement how variants should be handled
+- [x] Design and implement how variants should be handled
 - [ ] Better interface support i.e. `.mli` files 
 - [ ] Simple types (`int, list, records...`) to `Yaml.yaml` types
