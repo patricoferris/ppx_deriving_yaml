@@ -146,29 +146,70 @@ let test_option () =
   Alcotest.(check (result str_opt error))
     "(of_yaml) same string option (none)" correct_opt_none_of test_opt_none_of
 
-type poly_var = [ `Alpha | `Beta of int * string ] [@@deriving yaml]
+type var = Alpha | Beta of int | Gamma of string * int [@@deriving yaml]
 
-let poly_var =
+let var =
+  Alcotest.testable
+    (fun ppf -> function Alpha -> Fmt.string ppf "Alpha"
+      | Beta i -> Fmt.pf ppf "Beta %i" i
+      | Gamma (s, i) -> Fmt.pf ppf "Gamma (%s,%i)" s i)
+    Stdlib.( = )
+
+let test_var () =
+  let correct_yaml_a = `O [ ("Alpha", `A []) ] in
+  let test_yaml_a = var_to_yaml Alpha in
+  let correct_yaml_b = `O [ ("Beta", `A [ `Float 3. ]) ] in
+  let test_yaml_b = var_to_yaml (Beta 3) in
+  let correct_yaml_c = `O [ ("Gamma", `A [ `String "hello"; `Float 3. ]) ] in
+  let test_yaml_c = var_to_yaml (Gamma ("hello", 3)) in
+  let correct_yaml_a_of = Ok Alpha in
+  let test_yaml_a_of = var_of_yaml correct_yaml_a in
+  let correct_yaml_b_of = Ok (Beta 3) in
+  let test_yaml_b_of = var_of_yaml correct_yaml_b in
+  let correct_yaml_c_of = Ok (Gamma ("hello", 3)) in
+  let test_yaml_c_of = var_of_yaml correct_yaml_c in
+  Alcotest.check yaml "same variant" correct_yaml_a test_yaml_a;
+  Alcotest.check yaml "same variant" correct_yaml_b test_yaml_b;
+  Alcotest.check yaml "same variant" correct_yaml_c test_yaml_c;
+  Alcotest.(check (result var error))
+    "(of_yaml) same variant" correct_yaml_a_of test_yaml_a_of;
+  Alcotest.(check (result var error))
+    "(of_yaml) same variant" correct_yaml_b_of test_yaml_b_of;
+  Alcotest.(check (result var error))
+    "(of_yaml) same variant" correct_yaml_c_of test_yaml_c_of
+
+type poly_var = [ `Alpha | `Beta of int | `Gamma of string * int ]
+[@@deriving yaml]
+
+let poly_var : poly_var Alcotest.testable =
   Alcotest.testable
     (fun ppf -> function `Alpha -> Fmt.pf ppf "Alpha"
-      | `Beta (i, s) -> Fmt.pf ppf "Beta (%i, %s)" i s)
+      | `Beta i -> Fmt.pf ppf "Beta %i" i
+      | `Gamma (s, i) -> Fmt.pf ppf "Gamma (%s, %i)" s i)
     Stdlib.( = )
 
 let test_poly_variants () =
   let correct_yaml_a = `O [ ("Alpha", `A []) ] in
   let test_yaml_a = poly_var_to_yaml `Alpha in
-  let correct_yaml_b = `O [ ("Beta", `A [ `Float 3.; `String "hello" ]) ] in
-  let test_yaml_b = poly_var_to_yaml (`Beta (3, "hello")) in
+  let correct_yaml_b = `O [ ("Beta", `A [ `Float 3. ]) ] in
+  let test_yaml_b = poly_var_to_yaml (`Beta 3) in
+  let correct_yaml_c = `O [ ("Gamma", `A [ `String "hello"; `Float 3. ]) ] in
+  let test_yaml_c = poly_var_to_yaml (`Gamma ("hello", 3)) in
   let correct_yaml_a_of = Ok `Alpha in
   let test_yaml_a_of = poly_var_of_yaml correct_yaml_a in
-  let correct_yaml_b_of = Ok (`Beta (3, "hello")) in
+  let correct_yaml_b_of = Ok (`Beta 3) in
   let test_yaml_b_of = poly_var_of_yaml correct_yaml_b in
+  let correct_yaml_c_of = Ok (`Gamma ("hello", 3)) in
+  let test_yaml_c_of = poly_var_of_yaml correct_yaml_c in
   Alcotest.check yaml "same polymorphic variant" correct_yaml_a test_yaml_a;
   Alcotest.check yaml "same polymorphic variant" correct_yaml_b test_yaml_b;
+  Alcotest.check yaml "same polymorphic variant" correct_yaml_c test_yaml_c;
   Alcotest.(check (result poly_var error))
     "(of_yaml) same polymorphic variant" correct_yaml_a_of test_yaml_a_of;
   Alcotest.(check (result poly_var error))
-    "(of_yaml) same polymorphic variant" correct_yaml_b_of test_yaml_b_of
+    "(of_yaml) same polymorphic variant" correct_yaml_b_of test_yaml_b_of;
+  Alcotest.(check (result poly_var error))
+    "(of_yaml) same polymorphic variant" correct_yaml_c_of test_yaml_c_of
 
 let tests : unit Alcotest.test_case list =
   [
@@ -176,6 +217,7 @@ let tests : unit Alcotest.test_case list =
     ("test_record_list", `Quick, test_record_list);
     ("test_tuple", `Quick, test_tuple);
     ("test_simple_poly", `Quick, test_simple_poly);
+    ("test_var", `Quick, test_var);
     ("test_poly_variants", `Quick, test_poly_variants);
   ]
 

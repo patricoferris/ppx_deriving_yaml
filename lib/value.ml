@@ -2,7 +2,7 @@ open Ppxlib
 open Ast_helper
 open Ast_builder.Default
 
-let arg n = "arg" ^ string_of_int n
+let arg = Helpers.arg
 
 let rec type_to_expr typ =
   let loc = typ.ptyp_loc in
@@ -51,10 +51,6 @@ let rec type_to_expr typ =
       in
       [%expr fun [%p tuple_pattern] -> [%e list_apps]]
   | { ptyp_desc = Ptyp_variant (row_fields, _, _); _ } ->
-      (* [`A]                   ( true,  [] )
-         [`A of T]              ( false, [T] )
-         [`A of T1 & .. & Tn]   ( false, [T1;...Tn] )
-         [`A of & T1 & .. & Tn] ( true,  [T1;...Tn] *)
       let cases =
         List.map
           (fun (field : row_field) ->
@@ -83,7 +79,13 @@ let rec type_to_expr typ =
                                          [%e evar ~loc (arg i)]])
                                    typs)] );
                       ]]
-            | _ -> assert false)
+            | Rtag (label, false, [ t ]) ->
+                Exp.case
+                  (Pat.variant ~loc label.txt (Some (pvar ~loc "x")))
+                  [%expr
+                    [%e type_to_expr t] [%e evar ~loc "x"] |> fun x ->
+                    `O [ ([%e estring ~loc label.txt], `A [ x ]) ]]
+            | _ -> failwith "Not implemented")
           row_fields
       in
       Exp.function_ ~loc cases
@@ -141,6 +143,13 @@ let wrap_open_rresult ~loc expr =
 let mk_pat_match ~loc cases =
   let cases = cases @ [ ([%pat? _], [%expr Error (`Msg "err")]) ] in
   Exp.function_ (List.map (fun (pat, exp) -> Exp.case pat exp) cases)
+
+let monad_fold f =
+  List.fold_left (fun expr (t, i) ->
+      let loc = expr.pexp_loc in
+      [%expr
+        [%e f t] [%e evar ~loc (arg i)] >>= fun [%p pvar ~loc (arg i)] ->
+        [%e expr]])
 
 let rec of_yaml_type_to_expr name typ =
   let loc = typ.ptyp_loc in
@@ -244,15 +253,9 @@ let rec of_yaml_type_to_expr name typ =
                   [%pat? `O [ ([%p pstring ~loc name.txt], `A []) ]]
                   [%expr Result.Ok [%e Exp.variant name.txt None]]
             | Rtag (name, false, [ { ptyp_desc = Ptyp_tuple typs; _ } ]) ->
-                let monad_fold =
-                  List.fold_left (fun expr (t, i) ->
-                      let loc = expr.pexp_loc in
-                      [%expr
-                        [%e of_yaml_type_to_expr None t] [%e evar ~loc (arg i)]
-                        >>= fun [%p pvar ~loc (arg i)] -> [%e expr]])
-                in
                 let e =
                   monad_fold
+                    (of_yaml_type_to_expr None)
                     [%expr
                       Result.Ok
                         [%e
@@ -276,7 +279,13 @@ let rec of_yaml_type_to_expr name typ =
                         );
                       ]]
                   e
-            | _ -> failwith "Not implemented!")
+            | Rtag (name, false, [ t ]) ->
+                Exp.case
+                  [%pat? `O [ ([%p pstring ~loc name.txt], `A [ x ]) ]]
+                  [%expr
+                    [%e of_yaml_type_to_expr None t] x >>= fun x ->
+                    Result.Ok [%e Exp.variant name.txt (Some (evar ~loc "x"))]]
+            | _ -> Exp.case [%pat? _] [%expr Error (`Msg "Not implemented")])
           row_fields
       in
       wrap_open_rresult ~loc

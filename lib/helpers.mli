@@ -2,6 +2,8 @@ open Ppxlib
 
 val mkloc : 'a -> 'a Ppxlib.loc
 
+val arg : int -> string
+
 val suf_to : string
 
 val suf_of : string

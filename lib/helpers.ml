@@ -1,6 +1,8 @@
 open Ppxlib
 open Ast_helper
 
+let arg n = "arg" ^ string_of_int n
+
 let mkloc txt = { txt; loc = !Ast_helper.default_loc }
 
 let suf_to = "to_yaml"

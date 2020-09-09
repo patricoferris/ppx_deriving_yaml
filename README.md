@@ -52,6 +52,6 @@ One important thing is that `'a option` values within records will return `None`
 - [x] `Yaml.value` interface types 
 - [x] `Yaml.value` types to OCaml types i.e. `of_yaml` 
 - [x] More complex types (parametric polymorphic ones) to any of the Yaml types 
-- [ ] Design and implement how variants should be handled
+- [x] Design and implement how variants should be handled
 - [ ] Better interface support i.e. `.mli` files 
 - [ ] Simple types (`int, list, records...`) to `Yaml.yaml` types
