@@ -44,6 +44,10 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
              let to_yaml_cases =
                List.map
                  (fun ({ pcd_name; pcd_args; _ } as p) ->
+                   let name =
+                     Option.value ~default:pcd_name.txt
+                       (Attribute.get Attrs.name p)
+                   in
                    match pcd_args with
                    | Pcstr_tuple args ->
                        let pat_arg =
@@ -59,7 +63,7 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
                          [%expr
                            `O
                              [
-                               ( [%e estring ~loc pcd_name.txt],
+                               ( [%e estring ~loc name],
                                  `A
                                    [%e
                                      elist ~loc
@@ -76,7 +80,11 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
              let to_yaml_expr = Exp.function_ ~loc to_yaml_cases in
              let of_yaml_cases =
                List.map
-                 (fun { pcd_name; pcd_args; _ } ->
+                 (fun ({ pcd_name; pcd_args; _ } as p) ->
+                   let name =
+                     Option.value ~default:pcd_name.txt
+                       (Attribute.get Attrs.name p)
+                   in
                    match pcd_args with
                    | Pcstr_tuple args ->
                        let tuple =
@@ -92,7 +100,7 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
                          [%pat?
                            `O
                              [
-                               ( [%p pstring ~loc pcd_name.txt],
+                               ( [%p pstring ~loc name],
                                  `A
                                    [%p
                                      plist ~loc
@@ -175,7 +183,10 @@ let generate_intf ~ctxt (_rec_flag, type_decls) : Ppxlib.Ast.signature_item list
       | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type")
     type_decls
 
-let impl_generator = Deriving.Generator.V2.make_noarg generate_impl
+let impl_generator =
+  Deriving.Generator.V2.make_noarg
+    ~attributes:[ Attribute.T Attrs.name; Attribute.T Attrs.key ]
+    generate_impl
 
 let intf_generator = Deriving.Generator.V2.make_noarg generate_intf
 

@@ -211,6 +211,35 @@ let test_poly_variants () =
   Alcotest.(check (result poly_var error))
     "(of_yaml) same polymorphic variant" correct_yaml_c_of test_yaml_c_of
 
+(** Attributes *)
+type vattrib = Camel of int [@name "camel"] [@@deriving yaml]
+
+type rattrib = { camel_name : string [@key "camel-name"] } [@@deriving yaml]
+
+let vattrib =
+  Alcotest.testable (fun ppf (Camel i) -> Fmt.int ppf i) Stdlib.( = )
+
+let rattrib =
+  Alcotest.testable
+    (fun ppf v -> Fmt.pf ppf "{ camel-name: %s }" v.camel_name)
+    Stdlib.( = )
+
+let test_attrib () =
+  let correct_yaml_v = `O [ ("camel", `A [ `Float 1. ]) ] in
+  let test_yaml_v = vattrib_to_yaml (Camel 1) in
+  let correct_yaml_r = `O [ ("camel-name", `String "lawrence") ] in
+  let test_yaml_r = rattrib_to_yaml { camel_name = "lawrence" } in
+  let correct_yaml_v_of = Ok (Camel 1) in
+  let test_yaml_v_of = vattrib_of_yaml correct_yaml_v in
+  let correct_yaml_r_of = Ok { camel_name = "lawrence" } in
+  let test_yaml_r_of = rattrib_of_yaml correct_yaml_r in
+  Alcotest.check yaml "same variant" correct_yaml_v test_yaml_v;
+  Alcotest.check yaml "same record" correct_yaml_r test_yaml_r;
+  Alcotest.(check (result vattrib error))
+    "(of_yaml) same variant" correct_yaml_v_of test_yaml_v_of;
+  Alcotest.(check (result rattrib error))
+    "(of_yaml) same record" correct_yaml_r_of test_yaml_r_of
+
 let tests : unit Alcotest.test_case list =
   [
     ("test_primitives", `Quick, test_primitives);
@@ -219,6 +248,7 @@ let tests : unit Alcotest.test_case list =
     ("test_simple_poly", `Quick, test_simple_poly);
     ("test_var", `Quick, test_var);
     ("test_poly_variants", `Quick, test_poly_variants);
+    ("test_attrib", `Quick, test_attrib);
   ]
 
 let () = Alcotest.run "PPX_Deriving_Yaml" [ ("ppx", tests) ]
