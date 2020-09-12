@@ -4,6 +4,7 @@ open Ast_builder.Default
 
 let arg = Helpers.arg
 
+(* to_yaml *)
 let rec type_to_expr typ =
   let loc = typ.ptyp_loc in
   match typ with
@@ -107,14 +108,15 @@ and polymorphic_function names expr =
 let record_to_expr ~typ ~loc fields =
   let fields_to_expr fs =
     List.map
-      (fun { pld_name; pld_type; pld_loc; _ } ->
+      (fun ({ pld_name; pld_type; pld_loc; _ } as pld) ->
+        let name = Option.value ~default:pld_name.txt (Attribute.get Attrs.key pld) in 
         let field =
           Exp.field
             (Ast_builder.Default.evar ~loc "x")
             (Located.lident ~loc pld_name.txt)
         in
         [%expr
-          [%e Ast_builder.Default.estring ~loc:pld_loc pld_name.txt],
+          [%e Ast_builder.Default.estring ~loc:pld_loc name],
             [%e type_to_expr pld_type] [%e field]])
       fs
   in
@@ -151,6 +153,7 @@ let monad_fold f =
         [%e f t] [%e evar ~loc (arg i)] >>= fun [%p pvar ~loc (arg i)] ->
         [%e expr]])
 
+(* of_yaml *)
 let rec of_yaml_type_to_expr name typ =
   let loc = typ.ptyp_loc in
   let argument, expr_arg =
@@ -342,6 +345,7 @@ let of_yaml_record_to_expr ~loc fields =
   let kv_cases =
     List.mapi
       (fun i f ->
+        let name = Option.value ~default:f.pld_name.txt (Attribute.get Attrs.key f) in 
         let funcs =
           List.mapi
             (fun j _ ->
@@ -353,7 +357,7 @@ let of_yaml_record_to_expr ~loc fields =
             fields
         in
         Exp.case
-          [%pat? ([%p pstring ~loc f.pld_name.txt], x) :: xs]
+          [%pat? ([%p pstring ~loc name], x) :: xs]
           [%expr loop xs [%e Helpers.etuple ~loc funcs]])
       fields
   in

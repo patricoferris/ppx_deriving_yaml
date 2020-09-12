@@ -58,6 +58,24 @@ One important thing is that `'a option` values within records will return `None`
 | `record` e.g `{ name : string }` |  `` `O [("name", `String s)] `` |
 |  `A of int` or `` [`A of int]``  | `` `O [("A", `A [`Float f])] `` |
 
+### Optional Attributes 
+
+OCaml has constraints on the shape that certain words in the syntax can take. For example, record field names cannot begin with a capital letter and variant constructors must start with one. This limits what the generated yaml can look like. To override the yaml names you can use the `[@key <string>]` and `[@name <string>]` attributes for records and variants respectively. 
+
+For example: 
+
+```ocaml
+type t = {
+  camel_name : string [@key "camel-name"]
+}
+```
+
+Will produce Yaml of the form 
+
+```yaml
+camel-name: <string>
+```
+
 ### Checklist 
 
 - [x] Simples types (`int, list, records...`) to `Yaml.value` types
