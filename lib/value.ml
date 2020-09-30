@@ -109,7 +109,9 @@ let record_to_expr ~typ ~loc fields =
   let fields_to_expr fs =
     List.map
       (fun ({ pld_name; pld_type; pld_loc; _ } as pld) ->
-        let name = Option.value ~default:pld_name.txt (Attribute.get Attrs.key pld) in 
+        let name =
+          Option.value ~default:pld_name.txt (Attribute.get Attrs.key pld)
+        in
         let field =
           Exp.field
             (Ast_builder.Default.evar ~loc "x")
@@ -136,6 +138,20 @@ let type_decl_to_type type_decl =
           [%type: ([%t arg] -> Yaml.value) -> [%t typ]]
       | _ -> assert false)
     type_decl.ptype_params [%type: [%t t] -> Yaml.value]
+
+let type_decl_of_type type_decl =
+  let loc = type_decl.ptype_loc in
+  let t = core_type_of_type_declaration type_decl in
+  List.fold_right
+    (fun (param, _) typ ->
+      match param.ptyp_desc with
+      | Ptyp_any -> typ
+      | Ptyp_var name ->
+          let loc = param.ptyp_loc in
+          let arg = Typ.var ~loc name in
+          [%type: (Yaml.value -> [%t arg] Yaml.res) -> [%t typ]]
+      | _ -> assert false)
+    type_decl.ptype_params [%type: Yaml.value -> [%t t] Yaml.res]
 
 let wrap_open_rresult ~loc expr =
   [%expr
@@ -214,7 +230,7 @@ let rec of_yaml_type_to_expr name typ =
       [%expr fun x -> [%e fwd] x]
   | { ptyp_desc = Ptyp_var name; _ } ->
       let ident = Exp.ident (Located.lident ~loc ("poly_" ^ name)) in
-      [%expr ([%e ident] : Yaml.value -> _)]
+      [%expr ([%e ident] : Yaml.value -> (_, [> `Msg of string ]) result)]
   | { ptyp_desc = Ptyp_poly (names, typ); _ } ->
       polymorphic_function names (of_yaml_type_to_expr None typ)
   | { ptyp_desc = Ptyp_tuple typs; _ } ->
@@ -345,7 +361,9 @@ let of_yaml_record_to_expr ~loc fields =
   let kv_cases =
     List.mapi
       (fun i f ->
-        let name = Option.value ~default:f.pld_name.txt (Attribute.get Attrs.key f) in 
+        let name =
+          Option.value ~default:f.pld_name.txt (Attribute.get Attrs.key f)
+        in
         let funcs =
           List.mapi
             (fun j _ ->
