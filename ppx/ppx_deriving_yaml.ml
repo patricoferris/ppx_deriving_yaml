@@ -173,15 +173,27 @@ let generate_intf ~ctxt (_rec_flag, type_decls) : Ppxlib.Ast.signature_item list
     (fun typ_decl ->
       match typ_decl with
       | { ptype_kind = Ptype_abstract | Ptype_record _; _ } ->
-          psig_value ~loc
-            (Val.mk
-               {
-                 loc = typ_decl.ptype_name.loc;
-                 txt = mangle_name_label Helpers.suf_to typ_decl.ptype_name.txt;
-               }
-               (Value.type_decl_to_type typ_decl))
+          [
+            psig_value ~loc
+              (Val.mk
+                 {
+                   loc = typ_decl.ptype_name.loc;
+                   txt =
+                     mangle_name_label Helpers.suf_to typ_decl.ptype_name.txt;
+                 }
+                 (Value.type_decl_to_type typ_decl));
+            psig_value ~loc
+              (Val.mk
+                 {
+                   loc = typ_decl.ptype_name.loc;
+                   txt =
+                     mangle_name_label Helpers.suf_of typ_decl.ptype_name.txt;
+                 }
+                 (Value.type_decl_of_type typ_decl));
+          ]
       | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type")
     type_decls
+  |> List.concat
 
 let impl_generator =
   Deriving.Generator.V2.make_noarg

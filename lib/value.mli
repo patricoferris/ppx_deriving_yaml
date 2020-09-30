@@ -8,6 +8,8 @@ val record_to_expr :
 
 val type_decl_to_type : type_declaration -> core_type
 
+val type_decl_of_type : type_declaration -> core_type
+
 val of_yaml_type_to_expr : string option -> core_type -> expression
 
 val of_yaml_record_to_expr :
