@@ -83,5 +83,5 @@ camel-name: <string>
 - [x] `Yaml.value` types to OCaml types i.e. `of_yaml` 
 - [x] More complex types (parametric polymorphic ones) to any of the Yaml types 
 - [x] Design and implement how variants should be handled
-- [ ] Better interface support i.e. `.mli` files 
+- [x] Better interface support i.e. `.mli` files 
 - [ ] Simple types (`int, list, records...`) to `Yaml.yaml` types
