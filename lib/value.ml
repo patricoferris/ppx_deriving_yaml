@@ -158,8 +158,14 @@ let wrap_open_rresult ~loc expr =
     let open! Rresult.R.Infix in
     [%e expr]]
 
-let mk_pat_match ~loc cases =
-  let cases = cases @ [ ([%pat? _], [%expr Error (`Msg "err")]) ] in
+let mk_pat_match err_msg ~loc cases =
+  let cases =
+    cases
+    @ [
+        ( [%pat? _],
+          [%expr Error (`Msg [%e estring ~loc (String.concat "." err_msg)])] );
+      ]
+  in
   Exp.function_ (List.map (fun (pat, exp) -> Exp.case pat exp) cases)
 
 let monad_fold f =
@@ -170,7 +176,7 @@ let monad_fold f =
         [%e expr]])
 
 (* of_yaml *)
-let rec of_yaml_type_to_expr name typ =
+let rec of_yaml_type_to_expr ~path name typ =
   let loc = typ.ptyp_loc in
   let argument, expr_arg =
     match name with
@@ -179,33 +185,34 @@ let rec of_yaml_type_to_expr name typ =
   in
   match typ with
   | [%type: int] ->
-      mk_pat_match ~loc
+      mk_pat_match path ~loc
         [
           ([%pat? `Float [%p argument]], [%expr Ok (int_of_float [%e expr_arg])]);
         ]
   | [%type: float] ->
-      mk_pat_match ~loc
+      mk_pat_match path ~loc
         [ ([%pat? `Float [%p argument]], [%expr Ok [%e expr_arg]]) ]
   | [%type: string] ->
-      mk_pat_match ~loc
+      mk_pat_match path ~loc
         [ ([%pat? `String [%p argument]], [%expr Ok [%e expr_arg]]) ]
   | [%type: bool] ->
-      mk_pat_match ~loc
+      mk_pat_match path ~loc
         [ ([%pat? `Bool [%p argument]], [%expr Ok [%e expr_arg]]) ]
   | [%type: char] ->
-      mk_pat_match ~loc
+      mk_pat_match path ~loc
         [ ([%pat? `String [%p argument]], [%expr Ok [%e expr_arg].[0]]) ]
   | [%type: [%t? typ] list] ->
-      mk_pat_match ~loc
+      mk_pat_match path ~loc
         [
           ( [%pat? `A lst],
             [%expr
               let open! Rresult.R.Infix in
-              [%e Helpers.map_bind ~loc] [%e of_yaml_type_to_expr None typ] lst]
-          );
+              [%e Helpers.map_bind ~loc]
+                [%e of_yaml_type_to_expr ~path None typ]
+                lst] );
         ]
   | [%type: [%t? typ] array] ->
-      mk_pat_match ~loc
+      mk_pat_match path ~loc
         [
           ( [%pat? `A lst],
             [%expr
@@ -220,10 +227,11 @@ let rec of_yaml_type_to_expr name typ =
       [%expr
         function
         | `Null -> Ok None
-        | x -> [%e of_yaml_type_to_expr None typ] x >>= fun x -> Ok (Some x)]
+        | x ->
+            [%e of_yaml_type_to_expr ~path None typ] x >>= fun x -> Ok (Some x)]
   | { ptyp_desc = Ptyp_constr ({ txt = lid; _ }, args); _ } ->
       let fwd =
-        function_appl
+        function_appl path
           (Exp.ident (Helpers.mkloc (Helpers.mangle_suf Helpers.suf_of lid)))
           args
       in
@@ -232,7 +240,7 @@ let rec of_yaml_type_to_expr name typ =
       let ident = Exp.ident (Located.lident ~loc ("poly_" ^ name)) in
       [%expr ([%e ident] : Yaml.value -> (_, [> `Msg of string ]) result)]
   | { ptyp_desc = Ptyp_poly (names, typ); _ } ->
-      polymorphic_function names (of_yaml_type_to_expr None typ)
+      polymorphic_function names (of_yaml_type_to_expr ~path None typ)
   | { ptyp_desc = Ptyp_tuple typs; _ } ->
       let list_pat =
         [%pat?
@@ -245,7 +253,8 @@ let rec of_yaml_type_to_expr name typ =
       in
       let funcs =
         List.mapi
-          (fun i t -> (i, [%expr [%e of_yaml_type_to_expr (Some (arg i)) t]]))
+          (fun i t ->
+            (i, [%expr [%e of_yaml_type_to_expr ~path (Some (arg i)) t]]))
           typs
       in
       let expr =
@@ -261,7 +270,7 @@ let rec of_yaml_type_to_expr name typ =
                   (List.mapi (fun i _ -> evar ~loc (arg i)) typs)]]
           funcs
       in
-      wrap_open_rresult ~loc (mk_pat_match ~loc [ (list_pat, expr) ])
+      wrap_open_rresult ~loc (mk_pat_match path ~loc [ (list_pat, expr) ])
   | { ptyp_desc = Ptyp_variant (row_fields, _, _); _ } ->
       let cases =
         List.map
@@ -274,7 +283,7 @@ let rec of_yaml_type_to_expr name typ =
             | Rtag (name, false, [ { ptyp_desc = Ptyp_tuple typs; _ } ]) ->
                 let e =
                   monad_fold
-                    (of_yaml_type_to_expr None)
+                    (of_yaml_type_to_expr ~path None)
                     [%expr
                       Result.Ok
                         [%e
@@ -302,28 +311,25 @@ let rec of_yaml_type_to_expr name typ =
                 Exp.case
                   [%pat? `O [ ([%p pstring ~loc name.txt], `A [ x ]) ]]
                   [%expr
-                    [%e of_yaml_type_to_expr None t] x >>= fun x ->
+                    [%e of_yaml_type_to_expr ~path None t] x >>= fun x ->
                     Result.Ok [%e Exp.variant name.txt (Some (evar ~loc "x"))]]
             | _ -> Exp.case [%pat? _] [%expr Error (`Msg "Not implemented")])
           row_fields
       in
+      let err = "failed converting variant at " ^ String.concat "." path in
       wrap_open_rresult ~loc
         (Exp.function_ ~loc
            (cases
-           @ [
-               Exp.case
-                 [%pat? _]
-                 [%expr Error (`Msg "failed converting variant")];
-             ]))
+           @ [ Exp.case [%pat? _] [%expr Error (`Msg [%e estring ~loc err])] ]))
   | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type"
 
-and function_appl f l =
+and function_appl path f l =
   if l = [] then f
   else
     Exp.apply f
       (List.map
          (fun e -> (Nolabel, e))
-         (List.map (of_yaml_type_to_expr None) l))
+         (List.map (of_yaml_type_to_expr ~path None) l))
 
 and polymorphic_function names expr =
   List.fold_right
@@ -339,7 +345,7 @@ and polymorphic_function names expr =
     The loop goes over the possible key-value pairs in the list and accumulates
     the possible values in a list. Once complete whatever the last value was is
     used in the construction of the record. *)
-let of_yaml_record_to_expr ~loc fields =
+let of_yaml_record_to_expr ~path ~loc fields =
   let monad_binding =
     List.fold_left (fun expr i ->
         let loc = expr.pexp_loc in
@@ -368,8 +374,9 @@ let of_yaml_record_to_expr ~loc fields =
           List.mapi
             (fun j _ ->
               if i = j then
+                let path = path @ [ name ] in
                 eapply ~loc
-                  (of_yaml_type_to_expr None f.pld_type)
+                  (of_yaml_type_to_expr ~path None f.pld_type)
                   [ evar ~loc "x" ]
               else evar ~loc (arg j))
             fields

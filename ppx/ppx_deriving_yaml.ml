@@ -25,7 +25,7 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
                  in
                  let ocamliser =
                    Helpers.poly_fun ~loc:typ_decl.ptype_loc typ_decl
-                     (Value.of_yaml_type_to_expr None t)
+                     (Value.of_yaml_type_to_expr ~path:[ "M" ] None t)
                  in
                  let to_yaml = mangle_name_label suf_to ptype_name.txt in
                  let of_yaml = mangle_name_label suf_of ptype_name.txt in
@@ -110,7 +110,7 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
                              ]]
                          Value.(
                            monad_fold
-                             (of_yaml_type_to_expr None)
+                             (of_yaml_type_to_expr ~path:[ "M" ] None)
                              [%expr
                                Result.Ok
                                  [%e
@@ -124,12 +124,13 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
                    | _ -> failwith "Not implemented!")
                  constructors
              in
+             let err =
+               "no match for this variant expression: " ^ ptype_name.txt
+             in
              let of_yaml_cases =
                of_yaml_cases
                @ [
-                   Exp.case
-                     [%pat? _]
-                     [%expr Error (`Msg "no match for this variant expression")];
+                   Exp.case [%pat? _] [%expr Error (`Msg [%e estring ~loc err])];
                  ]
              in
              let of_yaml_expr =
@@ -159,7 +160,9 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
                    Vb.mk
                      (ppat_var ~loc { loc; txt = of_yaml })
                      (Helpers.poly_fun ~loc:ptype_loc typ_decl
-                        (Value.of_yaml_record_to_expr ~loc:ptype_loc fields));
+                        (Value.of_yaml_record_to_expr
+                           ~path:[ "Record"; ptype_name.txt ]
+                           ~loc:ptype_loc fields));
                  ];
              ]
          | _ ->
