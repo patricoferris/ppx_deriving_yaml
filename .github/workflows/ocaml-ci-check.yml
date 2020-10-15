@@ -1,0 +1,31 @@
+name: Github OCaml-CI Check
+on: 
+  schedule:
+    # Every week
+    - cron:  '0 5 */7 * *'
+  workflow_dispatch: {}
+jobs:
+  check-ci:
+    runs-on: ubuntu-latest
+    container:
+      image: patricoferris/ocaml-ci-action:latest
+      volumes: 
+        - /var/run/docker.sock:/var/run/docker.sock
+    steps:
+      - run: git clone https://github.com/$GITHUB_REPOSITORY $GITHUB_WORKSPACE/package && cd $GITHUB_WORKSPACE/package && git checkout $GITHUB_SHA
+      - name: OCaml-CI 
+        run: ocaml-ci-github --winmac --exit $GITHUB_WORKSPACE/package
+      - run: cat $GITHUB_WORKSPACE/package/.github/workflows/ocaml-ci.yml
+      - run: |
+          git config --global user.name 'Patrick Ferris'
+          git config --global user.email 'patricoferris@users.noreply.github.com'
+      - uses: peter-evans/create-pull-request@v3
+        with: 
+          path: package
+          token: ${{ secrets.PAT }}
+          commit-message: OCaml CI
+          title: Check OCaml-CI 
+          branch: ocaml-ci-check
+          base: master
+
+
