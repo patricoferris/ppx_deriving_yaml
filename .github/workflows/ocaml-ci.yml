@@ -4,7 +4,7 @@ jobs:
   debian-10-4_11:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:bf4bb3fd34e3638dd0d45fe37be9e53946130caa1061cb1bf0bad7f91fc85a50
+      image: ocurrent/opam@sha256:5f27f171f86b0521cede7dcd5369189555c3b32729f0e238d749627562dba7c7
       env:
         HOME: /home/opam
       options: --user 1000
@@ -24,8 +24,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -41,7 +41,7 @@ jobs:
   debian-10-4_10:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:448537709746304246280d99f57934dbad1647aea859db8f230760039f26cd68
+      image: ocurrent/opam@sha256:b2245cea39ed16fd39bd7ab70204b28fb73d1364e1bc702ef495798349e55e4f
       env:
         HOME: /home/opam
       options: --user 1000
@@ -61,8 +61,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -78,7 +78,7 @@ jobs:
   debian-10-4_09:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:9564ec4ef4ee9710b94142417bc97b9831bca773b26fe7ce794b9938178ad3fe
+      image: ocurrent/opam@sha256:c05d37244ae2b74dc961756e27b3b0e291154f67d7cf0998fb56fc81c3b2e3c6
       env:
         HOME: /home/opam
       options: --user 1000
@@ -98,8 +98,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -115,7 +115,7 @@ jobs:
   alpine-3_12-4_11:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:4781b8eb3af9da0b624ca74c537ae1b2a637506cd7bdea1722d021c8c88f0b64
+      image: ocurrent/opam@sha256:f417bf72449a6ae33e472340392e8b7258632e1057bdcc72b0acf7d39da137c6
       env:
         HOME: /home/opam
       options: --user 1000
@@ -135,8 +135,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -152,7 +152,7 @@ jobs:
   alpine-3_12-4_10:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:022168bd581a10954b475baa0d95ee1a21025e848f0b3eefd0817fd457f03480
+      image: ocurrent/opam@sha256:45797ed1fff076dfb8fc3653b6487da6095ce6fe224853c662f236be978bf41a
       env:
         HOME: /home/opam
       options: --user 1000
@@ -172,8 +172,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -189,7 +189,7 @@ jobs:
   alpine-3_12-4_09:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:9586d19a8eb85ce4f19441d6842707155378fbb45a39d0f449ed4d758243217b
+      image: ocurrent/opam@sha256:6ad19ee5ccf2f34bc4b1736e2d3b0c7cc598084ae24b88cbd6a763168b01c7c1
       env:
         HOME: /home/opam
       options: --user 1000
@@ -209,8 +209,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -226,7 +226,7 @@ jobs:
   ubuntu-18_04-4_11:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:9e218d9504485a82c4b494b9f4dea4d49d71deb04a32d58ef1e153dd348f397c
+      image: ocurrent/opam@sha256:22afc63482f2f6709a99378fc261acd2998ea54aa347f4621f3eaaf3187861d1
       env:
         HOME: /home/opam
       options: --user 1000
@@ -246,8 +246,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -263,7 +263,7 @@ jobs:
   ubuntu-18_04-4_10:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:058874dc5b14f2c40d6392c50b14e29ae7088f4ece38c855ed0309a4a34a3a05
+      image: ocurrent/opam@sha256:0e9d116141735d37845438db348e6e7f7c52458bd1bb4732a58a5cc037a7819c
       env:
         HOME: /home/opam
       options: --user 1000
@@ -283,8 +283,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -300,7 +300,7 @@ jobs:
   ubuntu-18_04-4_09:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:2dcbe7ae46bd42626e68dbb0bd5f53eb1de6a44d916afafa9233334700f13688
+      image: ocurrent/opam@sha256:45505a3350a9e4a18caa869e4f0d4b450cfd7ce31b572fec76b7ec4f4c185414
       env:
         HOME: /home/opam
       options: --user 1000
@@ -320,8 +320,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -337,7 +337,7 @@ jobs:
   opensuse-15_2-4_11:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:d2850afa46f0789bad899e3bb06b0b587020a830b1d8255e89df5faa1df1d378
+      image: ocurrent/opam@sha256:2acbc6a7c59b8c5b125e9cd17c87a8a1db93ba38ec2431b0ac4838a9e893684a
       env:
         HOME: /home/opam
       options: --user 1000
@@ -357,8 +357,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -374,7 +374,7 @@ jobs:
   opensuse-15_2-4_10:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:5b12e53e989287f65cd4af933c531ad9cfb6133c9a1b403992c1cf3aadbc9dfb
+      image: ocurrent/opam@sha256:d37856f2ecf18d0955ff8932d6bea2015afdfbe56a4619e7f51eb23b4d0961c8
       env:
         HOME: /home/opam
       options: --user 1000
@@ -394,8 +394,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -411,7 +411,7 @@ jobs:
   opensuse-15_2-4_09:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:93fc47747aa4dc849f614ca32cffc77754b2f8f69dc3a2f8289c7bf5cbe022e4
+      image: ocurrent/opam@sha256:68fc493374b7a41af9c9d36b6e25bc9912e44a1bbc7fe801b4edead307b295d2
       env:
         HOME: /home/opam
       options: --user 1000
@@ -431,8 +431,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -448,7 +448,7 @@ jobs:
   centos-8-4_11:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:248f23b9de0f02ee7497691d6a1293ae606018d4d36069577913e0b1548d257c
+      image: ocurrent/opam@sha256:b5249cc53e8ca5af803bc873317a503de8269f3f45be6f9ad77ef7f8d11484e9
       env:
         HOME: /home/opam
       options: --user 1000
@@ -468,8 +468,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -485,7 +485,7 @@ jobs:
   centos-8-4_10:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:f819ad730cefd8d80e911fed09fe208782c44daa6cec1778c81b626113f57041
+      image: ocurrent/opam@sha256:e5d4cdc32b561a23897846ed4031b122173ea7b93be7d10ed08d5225c4124247
       env:
         HOME: /home/opam
       options: --user 1000
@@ -505,8 +505,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -522,7 +522,7 @@ jobs:
   centos-8-4_09:
     runs-on: ubuntu-latest
     container:
-      image: ocurrent/opam@sha256:fa04d7520d7152d2d303b716edaf651bd2463adc22484cae016757d9fdf16275
+      image: ocurrent/opam@sha256:61703f417c091298599ab13abee04aead00c40c7e98da84102f76f54fad42444
       env:
         HOME: /home/opam
       options: --user 1000
@@ -542,8 +542,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
-        || git fetch origin master) && git reset -q --hard 1c3eeb89d37b65d9bd3cf1ab6fdb582f3afb2f9a
+    - run: cd ~/opam-repository && (git cat-file -e 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
+        || git fetch origin master) && git reset -q --hard 309bbf96b87cb3c8a2524106bf3b7ce6d03ff7c2
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
