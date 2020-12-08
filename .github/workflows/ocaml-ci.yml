@@ -24,8 +24,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 2c1982ceaf15be407519e79904b503dd0fea64dc
-        || git fetch origin master) && git reset -q --hard 2c1982ceaf15be407519e79904b503dd0fea64dc
+    - run: cd ~/opam-repository && (git cat-file -e cb70e69439e57cd947de40266a751a188e86922e
+        || git fetch origin master) && git reset -q --hard cb70e69439e57cd947de40266a751a188e86922e
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -135,8 +135,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 2c1982ceaf15be407519e79904b503dd0fea64dc
-        || git fetch origin master) && git reset -q --hard 2c1982ceaf15be407519e79904b503dd0fea64dc
+    - run: cd ~/opam-repository && (git cat-file -e cb70e69439e57cd947de40266a751a188e86922e
+        || git fetch origin master) && git reset -q --hard cb70e69439e57cd947de40266a751a188e86922e
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -246,8 +246,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 2c1982ceaf15be407519e79904b503dd0fea64dc
-        || git fetch origin master) && git reset -q --hard 2c1982ceaf15be407519e79904b503dd0fea64dc
+    - run: cd ~/opam-repository && (git cat-file -e cb70e69439e57cd947de40266a751a188e86922e
+        || git fetch origin master) && git reset -q --hard cb70e69439e57cd947de40266a751a188e86922e
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -357,8 +357,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 2c1982ceaf15be407519e79904b503dd0fea64dc
-        || git fetch origin master) && git reset -q --hard 2c1982ceaf15be407519e79904b503dd0fea64dc
+    - run: cd ~/opam-repository && (git cat-file -e cb70e69439e57cd947de40266a751a188e86922e
+        || git fetch origin master) && git reset -q --hard cb70e69439e57cd947de40266a751a188e86922e
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
@@ -468,8 +468,8 @@ jobs:
       run:
         working-directory: /home/opam
     steps:
-    - run: cd ~/opam-repository && (git cat-file -e 2c1982ceaf15be407519e79904b503dd0fea64dc
-        || git fetch origin master) && git reset -q --hard 2c1982ceaf15be407519e79904b503dd0fea64dc
+    - run: cd ~/opam-repository && (git cat-file -e cb70e69439e57cd947de40266a751a188e86922e
+        || git fetch origin master) && git reset -q --hard cb70e69439e57cd947de40266a751a188e86922e
         && git log --no-decorate -n1 --oneline && opam update -u
     - run: mkdir -p /home/opam/package
     - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
