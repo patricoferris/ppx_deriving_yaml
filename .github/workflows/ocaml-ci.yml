@@ -36,7 +36,6 @@ jobs:
       working-directory: /home/opam/package
     - run: opam install $DEPS
       working-directory: /home/opam/package
-    - run: cp . /src/
     - run: opam exec -- dune build @install @runtest && rm -rf _build
       working-directory: /home/opam/package
   alpine-3_12-ocaml-4_11:
@@ -74,7 +73,6 @@ jobs:
       working-directory: /home/opam/package
     - run: opam install $DEPS
       working-directory: /home/opam/package
-    - run: cp . /src/
     - run: opam exec -- dune build @install @runtest && rm -rf _build
       working-directory: /home/opam/package
   ubuntu-18_04-ocaml-4_11:
@@ -112,7 +110,6 @@ jobs:
       working-directory: /home/opam/package
     - run: opam install $DEPS
       working-directory: /home/opam/package
-    - run: cp . /src/
     - run: opam exec -- dune build @install @runtest && rm -rf _build
       working-directory: /home/opam/package
   opensuse-15_2-ocaml-4_11:
@@ -150,7 +147,6 @@ jobs:
       working-directory: /home/opam/package
     - run: opam install $DEPS
       working-directory: /home/opam/package
-    - run: cp . /src/
     - run: opam exec -- dune build @install @runtest && rm -rf _build
       working-directory: /home/opam/package
   centos-8-ocaml-4_11:
@@ -188,7 +184,6 @@ jobs:
       working-directory: /home/opam/package
     - run: opam install $DEPS
       working-directory: /home/opam/package
-    - run: cp . /src/
     - run: opam exec -- dune build @install @runtest && rm -rf _build
       working-directory: /home/opam/package
   fedora-32-ocaml-4_11:
@@ -227,7 +222,6 @@ jobs:
       working-directory: /home/opam/package
     - run: opam install $DEPS
       working-directory: /home/opam/package
-    - run: cp . /src/
     - run: opam exec -- dune build @install @runtest && rm -rf _build
       working-directory: /home/opam/package
   homebrew-latest-ocaml-4_11:
@@ -255,21 +249,13 @@ jobs:
     - uses: avsm/setup-ocaml@v1
       with:
         ocaml-version: ${{ matrix.ocaml-version }}
-    - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
-        || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
-        && git log --no-decorate -n1 --oneline && opam update -u
-    - run: mkdir -p /home/opam/package
-    - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
-      working-directory: /home/opam/package
     - run: opam pin add -yn ppx_deriving_yaml.dev "./"
-      working-directory: /home/opam/package
-    - run: opam depext --update -y ppx_deriving_yaml.dev $DEPS
-      working-directory: /home/opam/package
-    - run: opam install $DEPS
-      working-directory: /home/opam/package
-    - run: cp . /src/
+    - run: opam depext --update -yt ppx_deriving_yaml.dev
+    - run: opam list --short --columns=package > installed.deps; for dep in $DEPS;
+        do [[ ! "$dep" =~ $(echo ^\($(paste -sd'|' installed.deps)\)$) && ! "$dep"
+        = "ocaml."* && ! "$dep" = "ocaml-base-compiler."* ]] && export NEW_DEPS="$dep
+        $NEW_DEPS"; done; echo $NEW_DEPS; opam install $NEW_DEPS
     - run: opam exec -- dune build @install @runtest && rm -rf _build
-      working-directory: /home/opam/package
   windows-latest-ocaml-4_11:
     strategy:
       matrix:
@@ -295,18 +281,10 @@ jobs:
     - uses: avsm/setup-ocaml@v1
       with:
         ocaml-version: ${{ matrix.ocaml-version }}
-    - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
-        || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
-        && git log --no-decorate -n1 --oneline && opam update -u
-    - run: mkdir -p /home/opam/package
-    - run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
-      working-directory: /home/opam/package
     - run: opam pin add -yn ppx_deriving_yaml.dev "./"
-      working-directory: /home/opam/package
-    - run: opam depext --update -y ppx_deriving_yaml.dev $DEPS
-      working-directory: /home/opam/package
-    - run: opam install $DEPS
-      working-directory: /home/opam/package
-    - run: cp . /src/
+    - run: opam depext --update -yt ppx_deriving_yaml.dev
+    - run: opam list --short --columns=package > installed.deps; for dep in $DEPS;
+        do [[ ! "$dep" =~ $(echo ^\($(paste -sd'|' installed.deps)\)$) && ! "$dep"
+        = "ocaml."* && ! "$dep" = "ocaml-base-compiler."* ]] && export NEW_DEPS="$dep
+        $NEW_DEPS"; done; echo $NEW_DEPS; opam install $NEW_DEPS
     - run: opam exec -- dune build @install @runtest && rm -rf _build
-      working-directory: /home/opam/package
