@@ -234,7 +234,7 @@ jobs:
     strategy:
       matrix:
         operating-system: [macos-latest]
-        ocaml-version: [4.11.0, 4.10.0, 4.09.1]
+        ocaml-version: [4.11]
     runs-on: ${{ matrix.operating-system }}
     env:
       DEPS: alcotest.1.2.3 astring.0.8.5 base.v0.14.0 base-bigarray.base base-threads.base
@@ -252,7 +252,7 @@ jobs:
         shell: bash
     steps:
     - uses: actions/checkout@v2
-    - uses: avsm/setup-ocaml@v1.1.2
+    - uses: avsm/setup-ocaml@v1
       with:
         ocaml-version: ${{ matrix.ocaml-version }}
     - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
@@ -274,7 +274,7 @@ jobs:
     strategy:
       matrix:
         operating-system: [windows-latest]
-        ocaml-version: [4.11.0, 4.10.0, 4.09.1]
+        ocaml-version: [4.11]
     runs-on: ${{ matrix.operating-system }}
     env:
       DEPS: alcotest.1.2.3 astring.0.8.5 base.v0.14.0 base-bigarray.base base-threads.base
@@ -292,7 +292,7 @@ jobs:
         shell: bash
     steps:
     - uses: actions/checkout@v2
-    - uses: avsm/setup-ocaml@v1.1.2
+    - uses: avsm/setup-ocaml@v1
       with:
         ocaml-version: ${{ matrix.ocaml-version }}
     - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
