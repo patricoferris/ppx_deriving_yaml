@@ -1,10 +1,10 @@
 name: Github OCaml-CI
 on: [push, pull_request]
 jobs:
-  debian-10-ocaml-4_11:
+  debian-10-ocaml-4_11@sha256:b5680eb934acb0190b48149798b7281409e8ecc3e40ee278dd49f24eb9352366:
     runs-on: ubuntu-latest
     container:
-      image: ocaml/opam:debian-10-ocaml-4.11
+      image: ocaml/opam:debian-10-ocaml-4.11@sha256:b5680eb934acb0190b48149798b7281409e8ecc3e40ee278dd49f24eb9352366
       env:
         HOME: /home/opam
       options: --user 1000
@@ -38,10 +38,10 @@ jobs:
       working-directory: /home/opam/package
     - run: opam exec -- dune build @install @runtest && rm -rf _build
       working-directory: /home/opam/package
-  alpine-3_12-ocaml-4_11:
+  alpine-3_12-ocaml-4_11@sha256:45bd912ab2f97b89ce21f4d6da529a4e8925b2d66895006326ddc689eb76042e:
     runs-on: ubuntu-latest
     container:
-      image: ocaml/opam:alpine-3.12-ocaml-4.11
+      image: ocaml/opam:alpine-3.12-ocaml-4.11@sha256:45bd912ab2f97b89ce21f4d6da529a4e8925b2d66895006326ddc689eb76042e
       env:
         HOME: /home/opam
       options: --user 1000
@@ -75,10 +75,10 @@ jobs:
       working-directory: /home/opam/package
     - run: opam exec -- dune build @install @runtest && rm -rf _build
       working-directory: /home/opam/package
-  ubuntu-18_04-ocaml-4_11:
+  ubuntu-18_04-ocaml-4_11@sha256:40897481a016b2b1acae38b777b28bbbc0f4de75a8efc486311a7d716ce6eb6a:
     runs-on: ubuntu-latest
     container:
-      image: ocaml/opam:ubuntu-18.04-ocaml-4.11
+      image: ocaml/opam:ubuntu-18.04-ocaml-4.11@sha256:40897481a016b2b1acae38b777b28bbbc0f4de75a8efc486311a7d716ce6eb6a
       env:
         HOME: /home/opam
       options: --user 1000
@@ -112,10 +112,10 @@ jobs:
       working-directory: /home/opam/package
     - run: opam exec -- dune build @install @runtest && rm -rf _build
       working-directory: /home/opam/package
-  opensuse-15_2-ocaml-4_11:
+  opensuse-15_2-ocaml-4_11@sha256:9b8bb2bb7ccec94335c4bcd0d5fa2e26f2a8787f92d68cb1e3ce76e686ffdb09:
     runs-on: ubuntu-latest
     container:
-      image: ocaml/opam:opensuse-15.2-ocaml-4.11
+      image: ocaml/opam:opensuse-15.2-ocaml-4.11@sha256:9b8bb2bb7ccec94335c4bcd0d5fa2e26f2a8787f92d68cb1e3ce76e686ffdb09
       env:
         HOME: /home/opam
       options: --user 1000
@@ -149,10 +149,10 @@ jobs:
       working-directory: /home/opam/package
     - run: opam exec -- dune build @install @runtest && rm -rf _build
       working-directory: /home/opam/package
-  centos-8-ocaml-4_11:
+  centos-8-ocaml-4_11@sha256:8bf3dff310fd253023c99923f2c69738ab45eef01f6c98c6f0e1e5f0a470db1a:
     runs-on: ubuntu-latest
     container:
-      image: ocaml/opam:centos-8-ocaml-4.11
+      image: ocaml/opam:centos-8-ocaml-4.11@sha256:8bf3dff310fd253023c99923f2c69738ab45eef01f6c98c6f0e1e5f0a470db1a
       env:
         HOME: /home/opam
       options: --user 1000
@@ -186,10 +186,10 @@ jobs:
       working-directory: /home/opam/package
     - run: opam exec -- dune build @install @runtest && rm -rf _build
       working-directory: /home/opam/package
-  fedora-32-ocaml-4_11:
+  fedora-32-ocaml-4_11@sha256:ba74a13a95871c5b242f00f21feef5a452b3ec50c7841c445908de2fb7e27b33:
     runs-on: ubuntu-latest
     container:
-      image: ocaml/opam:fedora-32-ocaml-4.11
+      image: ocaml/opam:fedora-32-ocaml-4.11@sha256:ba74a13a95871c5b242f00f21feef5a452b3ec50c7841c445908de2fb7e27b33
       env:
         HOME: /home/opam
       options: --user 1000
@@ -251,10 +251,6 @@ jobs:
         ocaml-version: ${{ matrix.ocaml-version }}
     - run: opam pin add -yn ppx_deriving_yaml.dev "./"
     - run: opam depext --update -yt ppx_deriving_yaml.dev
-    - run: opam list --short --columns=package > installed.deps; for dep in $DEPS;
-        do [[ ! "$dep" =~ $(echo ^\($(paste -sd'|' installed.deps)\)$) && ! "$dep"
-        = "ocaml."* && ! "$dep" = "ocaml-base-compiler."* ]] && export NEW_DEPS="$dep
-        $NEW_DEPS"; done; echo $NEW_DEPS; opam install $NEW_DEPS
     - run: opam exec -- dune build @install @runtest && rm -rf _build
   windows-latest-ocaml-4_11:
     strategy:
@@ -283,8 +279,4 @@ jobs:
         ocaml-version: ${{ matrix.ocaml-version }}
     - run: opam pin add -yn ppx_deriving_yaml.dev "./"
     - run: opam depext --update -yt ppx_deriving_yaml.dev
-    - run: opam list --short --columns=package > installed.deps; for dep in $DEPS;
-        do [[ ! "$dep" =~ $(echo ^\($(paste -sd'|' installed.deps)\)$) && ! "$dep"
-        = "ocaml."* && ! "$dep" = "ocaml-base-compiler."* ]] && export NEW_DEPS="$dep
-        $NEW_DEPS"; done; echo $NEW_DEPS; opam install $NEW_DEPS
     - run: opam exec -- dune build @install @runtest && rm -rf _build
