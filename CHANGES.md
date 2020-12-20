@@ -1,3 +1,3 @@
-## v0.1.0 (Coming soon)
+## v0.1.0
 
 - Initial public release
