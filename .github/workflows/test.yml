@@ -2,233 +2,226 @@ name: OCaml-CI
 on: [push, pull_request]
 jobs:
   Debian:
-    job:
-      runs-on: ubuntu-latest
-      container:
-        image: ocaml/opam@sha256:3f9ad867a6fded20e9b0db6f23037d010a17c6fd72735689acfb6113f49f8163
-        env:
-          HOME: /home/opam
-        options: --user 1000
+    runs-on: ubuntu-latest
+    container:
+      image: ocaml/opam@sha256:3f9ad867a6fded20e9b0db6f23037d010a17c6fd72735689acfb6113f49f8163
       env:
         HOME: /home/opam
-      defaults:
-        run:
-          working-directory: /home/opam
-      steps:
-      - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
-          || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
-          && git log --no-decorate -n1 --oneline && opam update -u
-      - run: mkdir -p /home/opam/package
-      - name: Cloning
-        run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
-        working-directory: /home/opam/package
-      - name: Pinning Packages
-        run: opam pin add -yn ppx_deriving_yaml.dev './'
-        working-directory: /home/opam/package
-      - name: Installing external dependencies
-        run: opam depext -yt ppx_deriving_yaml.dev
-        working-directory: /home/opam/package
-      - name: Installing dependencies
-        run: opam install -t -y . --deps-only
-        working-directory: /home/opam/package
-      - name: Building, installing & testing
-        run: opam exec -- dune build @install @runtest
-        working-directory: /home/opam/package
+      options: --user 1000
+    env:
+      HOME: /home/opam
+    defaults:
+      run:
+        working-directory: /home/opam
+    steps:
+    - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
+        || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
+        && git log --no-decorate -n1 --oneline && opam update -u
+    - run: mkdir -p /home/opam/package
+    - name: Cloning
+      run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
+      working-directory: /home/opam/package
+    - name: Pinning Packages
+      run: opam pin add -yn ppx_deriving_yaml.dev './'
+      working-directory: /home/opam/package
+    - name: Installing external dependencies
+      run: opam depext -yt ppx_deriving_yaml.dev
+      working-directory: /home/opam/package
+    - name: Installing dependencies
+      run: opam install -t -y . --deps-only
+      working-directory: /home/opam/package
+    - name: Building, installing & testing
+      run: opam exec -- dune build @install @runtest
+      working-directory: /home/opam/package
   Alpine:
-    job:
-      runs-on: ubuntu-latest
-      container:
-        image: ocaml/opam@sha256:4515cfa4da4dc8ad7d84185972e859baf93f7af549411cfca76a967396777f81
-        env:
-          HOME: /home/opam
-        options: --user 1000
+    runs-on: ubuntu-latest
+    container:
+      image: ocaml/opam@sha256:4515cfa4da4dc8ad7d84185972e859baf93f7af549411cfca76a967396777f81
       env:
         HOME: /home/opam
-      defaults:
-        run:
-          working-directory: /home/opam
-      steps:
-      - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
-          || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
-          && git log --no-decorate -n1 --oneline && opam update -u
-      - run: mkdir -p /home/opam/package
-      - name: Cloning
-        run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
-        working-directory: /home/opam/package
-      - name: Pinning Packages
-        run: opam pin add -yn ppx_deriving_yaml.dev './'
-        working-directory: /home/opam/package
-      - name: Installing external dependencies
-        run: opam depext -yt ppx_deriving_yaml.dev
-        working-directory: /home/opam/package
-      - name: Installing dependencies
-        run: opam install -t -y . --deps-only
-        working-directory: /home/opam/package
-      - name: Building, installing & testing
-        run: opam exec -- dune build @install @runtest
-        working-directory: /home/opam/package
+      options: --user 1000
+    env:
+      HOME: /home/opam
+    defaults:
+      run:
+        working-directory: /home/opam
+    steps:
+    - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
+        || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
+        && git log --no-decorate -n1 --oneline && opam update -u
+    - run: mkdir -p /home/opam/package
+    - name: Cloning
+      run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
+      working-directory: /home/opam/package
+    - name: Pinning Packages
+      run: opam pin add -yn ppx_deriving_yaml.dev './'
+      working-directory: /home/opam/package
+    - name: Installing external dependencies
+      run: opam depext -yt ppx_deriving_yaml.dev
+      working-directory: /home/opam/package
+    - name: Installing dependencies
+      run: opam install -t -y . --deps-only
+      working-directory: /home/opam/package
+    - name: Building, installing & testing
+      run: opam exec -- dune build @install @runtest
+      working-directory: /home/opam/package
   Ubuntu:
-    job:
-      runs-on: ubuntu-latest
-      container:
-        image: ocaml/opam@sha256:67631b55dafe8c5aa3c0ed4ee75dd7031e0f83cd5fb7a879aa22f5cc5444ac78
-        env:
-          HOME: /home/opam
-        options: --user 1000
+    runs-on: ubuntu-latest
+    container:
+      image: ocaml/opam@sha256:67631b55dafe8c5aa3c0ed4ee75dd7031e0f83cd5fb7a879aa22f5cc5444ac78
       env:
         HOME: /home/opam
-      defaults:
-        run:
-          working-directory: /home/opam
-      steps:
-      - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
-          || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
-          && git log --no-decorate -n1 --oneline && opam update -u
-      - run: mkdir -p /home/opam/package
-      - name: Cloning
-        run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
-        working-directory: /home/opam/package
-      - name: Pinning Packages
-        run: opam pin add -yn ppx_deriving_yaml.dev './'
-        working-directory: /home/opam/package
-      - name: Installing external dependencies
-        run: opam depext -yt ppx_deriving_yaml.dev
-        working-directory: /home/opam/package
-      - name: Installing dependencies
-        run: opam install -t -y . --deps-only
-        working-directory: /home/opam/package
-      - name: Building, installing & testing
-        run: opam exec -- dune build @install @runtest
-        working-directory: /home/opam/package
+      options: --user 1000
+    env:
+      HOME: /home/opam
+    defaults:
+      run:
+        working-directory: /home/opam
+    steps:
+    - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
+        || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
+        && git log --no-decorate -n1 --oneline && opam update -u
+    - run: mkdir -p /home/opam/package
+    - name: Cloning
+      run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
+      working-directory: /home/opam/package
+    - name: Pinning Packages
+      run: opam pin add -yn ppx_deriving_yaml.dev './'
+      working-directory: /home/opam/package
+    - name: Installing external dependencies
+      run: opam depext -yt ppx_deriving_yaml.dev
+      working-directory: /home/opam/package
+    - name: Installing dependencies
+      run: opam install -t -y . --deps-only
+      working-directory: /home/opam/package
+    - name: Building, installing & testing
+      run: opam exec -- dune build @install @runtest
+      working-directory: /home/opam/package
   Ubuntu:
-    job:
-      runs-on: ubuntu-latest
-      container:
-        image: ocaml/opam@sha256:3a2c3126b8587a1dda2a92406cd4f438dd564642cb834933852bde898b51ab34
-        env:
-          HOME: /home/opam
-        options: --user 1000
+    runs-on: ubuntu-latest
+    container:
+      image: ocaml/opam@sha256:3a2c3126b8587a1dda2a92406cd4f438dd564642cb834933852bde898b51ab34
       env:
         HOME: /home/opam
-      defaults:
-        run:
-          working-directory: /home/opam
-      steps:
-      - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
-          || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
-          && git log --no-decorate -n1 --oneline && opam update -u
-      - run: mkdir -p /home/opam/package
-      - name: Cloning
-        run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
-        working-directory: /home/opam/package
-      - name: Pinning Packages
-        run: opam pin add -yn ppx_deriving_yaml.dev './'
-        working-directory: /home/opam/package
-      - name: Installing external dependencies
-        run: opam depext -yt ppx_deriving_yaml.dev
-        working-directory: /home/opam/package
-      - name: Installing dependencies
-        run: opam install -t -y . --deps-only
-        working-directory: /home/opam/package
-      - name: Building, installing & testing
-        run: opam exec -- dune build @install @runtest
-        working-directory: /home/opam/package
+      options: --user 1000
+    env:
+      HOME: /home/opam
+    defaults:
+      run:
+        working-directory: /home/opam
+    steps:
+    - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
+        || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
+        && git log --no-decorate -n1 --oneline && opam update -u
+    - run: mkdir -p /home/opam/package
+    - name: Cloning
+      run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
+      working-directory: /home/opam/package
+    - name: Pinning Packages
+      run: opam pin add -yn ppx_deriving_yaml.dev './'
+      working-directory: /home/opam/package
+    - name: Installing external dependencies
+      run: opam depext -yt ppx_deriving_yaml.dev
+      working-directory: /home/opam/package
+    - name: Installing dependencies
+      run: opam install -t -y . --deps-only
+      working-directory: /home/opam/package
+    - name: Building, installing & testing
+      run: opam exec -- dune build @install @runtest
+      working-directory: /home/opam/package
   OpenSUSE:
-    job:
-      runs-on: ubuntu-latest
-      container:
-        image: ocaml/opam@sha256:b02664ac28c726ba5da33d77253de70f19b8ff8d62b435ef35bc9fdd7762a68d
-        env:
-          HOME: /home/opam
-        options: --user 1000
+    runs-on: ubuntu-latest
+    container:
+      image: ocaml/opam@sha256:b02664ac28c726ba5da33d77253de70f19b8ff8d62b435ef35bc9fdd7762a68d
       env:
         HOME: /home/opam
-      defaults:
-        run:
-          working-directory: /home/opam
-      steps:
-      - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
-          || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
-          && git log --no-decorate -n1 --oneline && opam update -u
-      - run: mkdir -p /home/opam/package
-      - name: Cloning
-        run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
-        working-directory: /home/opam/package
-      - name: Pinning Packages
-        run: opam pin add -yn ppx_deriving_yaml.dev './'
-        working-directory: /home/opam/package
-      - name: Installing external dependencies
-        run: opam depext -yt ppx_deriving_yaml.dev
-        working-directory: /home/opam/package
-      - name: Installing dependencies
-        run: opam install -t -y . --deps-only
-        working-directory: /home/opam/package
-      - name: Building, installing & testing
-        run: opam exec -- dune build @install @runtest
-        working-directory: /home/opam/package
+      options: --user 1000
+    env:
+      HOME: /home/opam
+    defaults:
+      run:
+        working-directory: /home/opam
+    steps:
+    - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
+        || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
+        && git log --no-decorate -n1 --oneline && opam update -u
+    - run: mkdir -p /home/opam/package
+    - name: Cloning
+      run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
+      working-directory: /home/opam/package
+    - name: Pinning Packages
+      run: opam pin add -yn ppx_deriving_yaml.dev './'
+      working-directory: /home/opam/package
+    - name: Installing external dependencies
+      run: opam depext -yt ppx_deriving_yaml.dev
+      working-directory: /home/opam/package
+    - name: Installing dependencies
+      run: opam install -t -y . --deps-only
+      working-directory: /home/opam/package
+    - name: Building, installing & testing
+      run: opam exec -- dune build @install @runtest
+      working-directory: /home/opam/package
   CentOS:
-    job:
-      runs-on: ubuntu-latest
-      container:
-        image: ocaml/opam@sha256:1cdf24f875d20d0367cb7c8282487470c7728265224002a339cdbe4440fe8a60
-        env:
-          HOME: /home/opam
-        options: --user 1000
+    runs-on: ubuntu-latest
+    container:
+      image: ocaml/opam@sha256:1cdf24f875d20d0367cb7c8282487470c7728265224002a339cdbe4440fe8a60
       env:
         HOME: /home/opam
-      defaults:
-        run:
-          working-directory: /home/opam
-      steps:
-      - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
-          || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
-          && git log --no-decorate -n1 --oneline && opam update -u
-      - run: mkdir -p /home/opam/package
-      - name: Cloning
-        run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
-        working-directory: /home/opam/package
-      - name: Pinning Packages
-        run: opam pin add -yn ppx_deriving_yaml.dev './'
-        working-directory: /home/opam/package
-      - name: Installing external dependencies
-        run: opam depext -yt ppx_deriving_yaml.dev
-        working-directory: /home/opam/package
-      - name: Installing dependencies
-        run: opam install -t -y . --deps-only
-        working-directory: /home/opam/package
-      - name: Building, installing & testing
-        run: opam exec -- dune build @install @runtest
-        working-directory: /home/opam/package
+      options: --user 1000
+    env:
+      HOME: /home/opam
+    defaults:
+      run:
+        working-directory: /home/opam
+    steps:
+    - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
+        || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
+        && git log --no-decorate -n1 --oneline && opam update -u
+    - run: mkdir -p /home/opam/package
+    - name: Cloning
+      run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
+      working-directory: /home/opam/package
+    - name: Pinning Packages
+      run: opam pin add -yn ppx_deriving_yaml.dev './'
+      working-directory: /home/opam/package
+    - name: Installing external dependencies
+      run: opam depext -yt ppx_deriving_yaml.dev
+      working-directory: /home/opam/package
+    - name: Installing dependencies
+      run: opam install -t -y . --deps-only
+      working-directory: /home/opam/package
+    - name: Building, installing & testing
+      run: opam exec -- dune build @install @runtest
+      working-directory: /home/opam/package
   Fedora:
-    job:
-      runs-on: ubuntu-latest
-      container:
-        image: ocaml/opam@sha256:086a2cbb4cd569e56c26cc1c5a8ccdb093eb7ce60275bd5a1a8efd18b6f71c27
-        env:
-          HOME: /home/opam
-        options: --user 1000
+    runs-on: ubuntu-latest
+    container:
+      image: ocaml/opam@sha256:086a2cbb4cd569e56c26cc1c5a8ccdb093eb7ce60275bd5a1a8efd18b6f71c27
       env:
         HOME: /home/opam
-      defaults:
-        run:
-          working-directory: /home/opam
-      steps:
-      - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
-          || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
-          && git log --no-decorate -n1 --oneline && opam update -u
-      - run: mkdir -p /home/opam/package
-      - name: Cloning
-        run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
-        working-directory: /home/opam/package
-      - name: Pinning Packages
-        run: opam pin add -yn ppx_deriving_yaml.dev './'
-        working-directory: /home/opam/package
-      - name: Installing external dependencies
-        run: opam depext -yt ppx_deriving_yaml.dev
-        working-directory: /home/opam/package
-      - name: Installing dependencies
-        run: opam install -t -y . --deps-only
-        working-directory: /home/opam/package
-      - name: Building, installing & testing
-        run: opam exec -- dune build @install @runtest
-        working-directory: /home/opam/package
+      options: --user 1000
+    env:
+      HOME: /home/opam
+    defaults:
+      run:
+        working-directory: /home/opam
+    steps:
+    - run: cd ~/opam-repository && (git cat-file -e aaf8fed5fa134979c4552e283800798ac3f64366
+        || git fetch origin master) && git reset -q --hard aaf8fed5fa134979c4552e283800798ac3f64366
+        && git log --no-decorate -n1 --oneline && opam update -u
+    - run: mkdir -p /home/opam/package
+    - name: Cloning
+      run: git clone https://github.com/$GITHUB_REPOSITORY . && git checkout $GITHUB_SHA
+      working-directory: /home/opam/package
+    - name: Pinning Packages
+      run: opam pin add -yn ppx_deriving_yaml.dev './'
+      working-directory: /home/opam/package
+    - name: Installing external dependencies
+      run: opam depext -yt ppx_deriving_yaml.dev
+      working-directory: /home/opam/package
+    - name: Installing dependencies
+      run: opam install -t -y . --deps-only
+      working-directory: /home/opam/package
+    - name: Building, installing & testing
+      run: opam exec -- dune build @install @runtest
+      working-directory: /home/opam/package
