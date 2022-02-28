@@ -15,7 +15,7 @@
 
 (package
  (name ppx_deriving_yaml)
- (synopsis "Yaml PPX Derivier")
+ (synopsis "Yaml PPX Deriver")
  (description "Build Yaml types from OCaml types")
  (depends
   (alcotest :with-test)
