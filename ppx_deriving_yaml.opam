@@ -2,7 +2,7 @@
 opam-version: "2.0"
 synopsis: "Yaml PPX Derivier"
 description: "Build Yaml types from OCaml types"
-maintainer: ["pf341@patricoferris.com"]
+maintainer: ["patrick@sirref.org"]
 authors: ["Patrick Ferris"]
 license: "ISC"
 homepage: "https://github.com/patricoferris/ppx_deriving_yaml"
@@ -16,7 +16,6 @@ depends: [
   "ocaml" {>= "4.08.1"}
   "ppxlib" {>= "0.14.0"}
   "yaml"
-  "rresult"
 ]
 build: [
   ["dune" "subst"] {pinned}

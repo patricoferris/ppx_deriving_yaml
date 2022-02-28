@@ -12,7 +12,7 @@ For converting OCaml types to Yaml types `ppx_deriving_yaml` will do the convent
 
 `to_yaml` produces a [`Yaml.value`](https://github.com/avsm/ocaml-yaml/blob/master/lib/types.ml#L44) which is compatible with the [`Ezjsonm.value`](https://github.com/mirage/ezjsonm/blob/master/lib/ezjsonm.ml#L18) type. 
 
-`of_yaml` produces OCaml types wrapped in a `Rresult.R.t` -- this is how ocaml-yaml also handles errors i.e. not using exceptions. Based on your type this should let you move between yaml and OCaml types.
+`of_yaml` produces OCaml types wrapped in a `result` -- this is how ocaml-yaml also handles errors i.e. not using exceptions. Based on your type this should let you move between yaml and OCaml types.
 
 Here is a small example. 
 

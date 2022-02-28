@@ -155,7 +155,7 @@ let type_decl_of_type type_decl =
 
 let wrap_open_rresult ~loc expr =
   [%expr
-    let open! Rresult.R.Infix in
+    let ( >>= ) v f = match v with Ok v -> f v | Error _ as e -> e in
     [%e expr]]
 
 let mk_pat_match ~loc cases =
@@ -200,7 +200,7 @@ let rec of_yaml_type_to_expr name typ =
         [
           ( [%pat? `A lst],
             [%expr
-              let open! Rresult.R.Infix in
+              let ( >>= ) v f = match v with Ok v -> f v | Error _ as e -> e in
               [%e Helpers.map_bind ~loc] [%e of_yaml_type_to_expr None typ] lst]
           );
         ]
@@ -209,7 +209,7 @@ let rec of_yaml_type_to_expr name typ =
         [
           ( [%pat? `A lst],
             [%expr
-              let open! Rresult.R.Infix in
+              let ( >>= ) v f = match v with Ok v -> f v | Error _ as e -> e in
               `A
                 Array.(
                   to_list ([%e Helpers.map_bind ~loc] [%e type_to_expr typ]))]
