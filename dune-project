@@ -11,7 +11,7 @@
 
 (authors "Patrick Ferris")
 
-(maintainers "pf341@patricoferris.com")
+(maintainers "patrick@sirref.org")
 
 (package
  (name ppx_deriving_yaml)
@@ -26,7 +26,6 @@
    (>= 4.08.1))
   (ppxlib
    (>= 0.14.0))
-  yaml
-  rresult))
+  yaml))
 
 (using mdx 0.1)
