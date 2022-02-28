@@ -3,17 +3,14 @@ let yaml = Alcotest.testable Yaml.pp Yaml.equal
 type error = [ `Msg of string ]
 
 let pp_error ppf (`Msg x) = Fmt.string ppf x
-
 let error = Alcotest.testable pp_error ( = )
 
 type str = string [@@deriving yaml]
-
 type flo = float [@@deriving yaml]
 
 let flo = Alcotest.testable Format.pp_print_float Stdlib.( = )
 
 type integer = int [@@deriving yaml]
-
 type boolean = bool [@@deriving yaml]
 
 let test_primitives () =
@@ -150,7 +147,8 @@ type var = Alpha | Beta of int | Gamma of string * int [@@deriving yaml]
 
 let var =
   Alcotest.testable
-    (fun ppf -> function Alpha -> Fmt.string ppf "Alpha"
+    (fun ppf -> function
+      | Alpha -> Fmt.string ppf "Alpha"
       | Beta i -> Fmt.pf ppf "Beta %i" i
       | Gamma (s, i) -> Fmt.pf ppf "Gamma (%s,%i)" s i)
     Stdlib.( = )
@@ -183,7 +181,8 @@ type poly_var = [ `Alpha | `Beta of int | `Gamma of string * int ]
 
 let poly_var : poly_var Alcotest.testable =
   Alcotest.testable
-    (fun ppf -> function `Alpha -> Fmt.pf ppf "Alpha"
+    (fun ppf -> function
+      | `Alpha -> Fmt.pf ppf "Alpha"
       | `Beta i -> Fmt.pf ppf "Beta %i" i
       | `Gamma (s, i) -> Fmt.pf ppf "Gamma (%s, %i)" s i)
     Stdlib.( = )

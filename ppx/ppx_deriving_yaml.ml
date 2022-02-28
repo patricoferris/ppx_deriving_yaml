@@ -4,7 +4,6 @@ open Ast_builder.Default
 open Ppx_deriving_yaml_lib
 
 let suf_to = Helpers.suf_to
-
 let suf_of = Helpers.suf_of
 
 let mangle_name_label suff label =
