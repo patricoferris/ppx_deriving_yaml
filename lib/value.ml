@@ -338,6 +338,15 @@ and polymorphic_function names expr =
       [%expr fun [%p arg] -> [%e expr]])
     names expr
 
+let derive_pattern ~loc label_decl =
+      let { pld_name; pld_type; _ } = label_decl in
+      let default = (Attribute.get Attrs.default label_decl) in 
+         match default, pld_type with
+         | Some default, _ -> Optional pld_name.txt, pvar ~loc pld_name.txt, Some default
+         | _ , [%type: [%t? _] list] -> Optional pld_name.txt, pvar ~loc pld_name.txt, Some (elist ~loc [])
+         | _, [%type: [%t? _] option] -> Optional pld_name.txt, pvar ~loc pld_name.txt, None
+         | None,  _ -> Labelled pld_name.txt, pvar ~loc pld_name.txt, None
+
 (** Method used by PPX Deriving Yojson
     https://github.com/ocaml-ppx/ppx_deriving_yojson/blob/master/src/ppx_deriving_yojson.ml#L508
     The loop goes over the possible key-value pairs in the list and accumulates
@@ -392,6 +401,7 @@ let of_yaml_record_to_expr ~loc fields =
           [%expr Error (`Msg (x ^ Yaml.to_string_exn y))];
       ]
   in
+  let patterns = List.map (derive_pattern ~loc) fields in
   let option_to_none t =
     match t.pld_type with
     | [%type: [%t? _] option] -> [%expr Ok None]
