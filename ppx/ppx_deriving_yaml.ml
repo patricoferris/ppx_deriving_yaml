@@ -42,14 +42,10 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
              let of_yaml = mangle_name_label suf_of ptype_name.txt in
              let to_yaml_cases =
                List.map
-                 (fun ({ pcd_name; pcd_default; pcd_args; _ } as p) ->
+                 (fun ({ pcd_name; pcd_args; _ } as p) ->
                    let name =
                      Option.value ~default:pcd_name.txt
                        (Attribute.get Attrs.name p)
-                   in
-                   let default =
-                     Option.value ~default:pcd_default.txt
-                       (Attribute.get Attrs.default p)
                    in
                    match pcd_args with
                    | Pcstr_tuple args ->
@@ -83,14 +79,10 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
              let to_yaml_expr = Exp.function_ ~loc to_yaml_cases in
              let of_yaml_cases =
                List.map
-                 (fun ({ pcd_name; pcd_default; pcd_args; _ } as p) ->
+                 (fun ({ pcd_name; pcd_args; _ } as p) ->
                    let name =
                      Option.value ~default:pcd_name.txt
                        (Attribute.get Attrs.name p)
-                   in
-                   let default =
-                     Option.value ~default:pcd_default.txt
-                       (Attribute.get Attrs.default p)
                    in
                    match pcd_args with
                    | Pcstr_tuple args ->
@@ -204,10 +196,13 @@ let generate_intf ~ctxt (_rec_flag, type_decls) : Ppxlib.Ast.signature_item list
 
 let impl_generator =
   Deriving.Generator.V2.make_noarg
-    ~attributes:[ Attribute.T Attrs.name; Attribute.T Attrs.key; Attribute.T Attrs.default]
+    ~attributes:[Attribute.T Attrs.default; Attribute.T Attrs.name; Attribute.T Attrs.key]
     generate_impl
 
-let intf_generator = Deriving.Generator.V2.make_noarg generate_intf
+let intf_generator = 
+  Deriving.Generator.V2.make_noarg 
+    (* ~attributes:[Attribute.T Attrs.default; Attribute.T Attrs.name; Attribute.T Attrs.key] *)
+    generate_intf
 
 let to_yaml =
   Deriving.add "yaml" ~str_type_decl:impl_generator
