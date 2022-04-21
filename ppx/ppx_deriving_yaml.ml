@@ -47,6 +47,7 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
                      Option.value ~default:pcd_name.txt
                        (Attribute.get Attrs.name p)
                    in
+                   print_endline name;
                    match pcd_args with
                    | Pcstr_tuple args ->
                        let pat_arg =
@@ -201,7 +202,6 @@ let impl_generator =
 
 let intf_generator = 
   Deriving.Generator.V2.make_noarg 
-    (* ~attributes:[Attribute.T Attrs.default; Attribute.T Attrs.name; Attribute.T Attrs.key] *)
     generate_intf
 
 let to_yaml =
