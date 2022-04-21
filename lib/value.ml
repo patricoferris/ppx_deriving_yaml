@@ -337,21 +337,6 @@ and polymorphic_function names expr =
       let arg = Pat.var { loc; txt = "poly_" ^ name } in
       [%expr fun [%p arg] -> [%e expr]])
     names expr
-
-let derive_pattern ~loc label_decl =
-      let { pld_type = ty; _ } = label_decl in
-      let default_attr = (Attribute.get Attrs.default label_decl) in 
-         match default_attr, ty with
-         | Some default_attr, _ ->  default_attr
-         | _ , [%type: [%t? _] list] ->  [%expr Ok  (elist ~loc [])]
-         | _, [%type: [%t? _] option] ->  [%expr Ok None]
-         | None,  _ ->
-          [%expr
-          Error
-            (`Msg
-              [%e
-                estring ~loc
-                  ("Didn't find the function for key: " ^ label_decl.pld_name.txt)])]
     
 (** Method used by PPX Deriving Yojson
     https://github.com/ocaml-ppx/ppx_deriving_yojson/blob/master/src/ppx_deriving_yojson.ml#L508
@@ -407,7 +392,19 @@ let of_yaml_record_to_expr ~loc fields =
           [%expr Error (`Msg (x ^ Yaml.to_string_exn y))];
       ]
   in
-  let option_to_none t = derive_pattern ~loc t in
+  let option_to_none t = 
+    let { pld_type; _ } = t in
+      let default = (Attribute.get Attrs.default t) in 
+        match default, pld_type with
+        | Some attr, _ -> attr
+        | None, [%type: [%t? _] option] -> [%expr Ok None]
+        | None, _ ->
+          [%expr
+          Error
+            (`Msg
+              [%e
+                estring ~loc
+                  ("Didn't find the function for key: " ^ t.pld_name.txt)])] in
   let e =
     [%expr
       function
