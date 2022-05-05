@@ -198,7 +198,7 @@ let impl_generator =
   Deriving.Generator.V2.make_noarg
     ~attributes:
       [
-        Attribute.T Attrs.default; Attribute.T Attrs.name; Attribute.T Attrs.key
+        Attribute.T Attrs.default; Attribute.T Attrs.name; Attribute.T Attrs.key;
       ]
     generate_impl
 

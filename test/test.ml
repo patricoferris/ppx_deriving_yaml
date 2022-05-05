@@ -72,14 +72,14 @@ let test_record_list () =
       ]
   in
   let with_default_correct =
-   `O
-     [
-       ( "db",
-         `A
-           [
+    `O
+      [
+        ( "db",
+          `A
+            [
               `O [ ("age", `Float 20.) ];
               `O [ ("name", `String "Bob"); ("age", `Float 21.) ];
-           ] );
+            ] );
       ]
   in
   let test =
