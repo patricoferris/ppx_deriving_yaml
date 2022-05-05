@@ -337,12 +337,27 @@ and polymorphic_function names expr =
       let arg = Pat.var { loc; txt = "poly_" ^ name } in
       [%expr fun [%p arg] -> [%e expr]])
     names expr
-    
+
 (** Method used by PPX Deriving Yojson
     https://github.com/ocaml-ppx/ppx_deriving_yojson/blob/master/src/ppx_deriving_yojson.ml#L508
     The loop goes over the possible key-value pairs in the list and accumulates
     the possible values in a list. Once complete whatever the last value was is
     used in the construction of the record. *)
+
+(* let get_attribute attr ld ~f =
+    Option.map (Attribute.get attr ld) ~f:(fun x -> f x, Attribute.name attr)
+
+let create ~loc getters ld =
+            match ld.pld_type with
+             | [%type: [%t? _] option] -> [%expr Ok None]
+             | _ -> 
+              [%expr
+                Error
+                  (`Msg
+                    [%e
+                      estring ~loc
+                        ("Didn't find the function for key: " ^ ld.pld_name.txt)])] *)
+
 let of_yaml_record_to_expr ~loc fields =
   let monad_binding =
     List.fold_left (fun expr i ->
@@ -393,18 +408,22 @@ let of_yaml_record_to_expr ~loc fields =
       ]
   in
   let option_to_none t = 
-    let { pld_type; _ } = t in
-      let default = (Attribute.get Attrs.default t) in 
-        match default, pld_type with
-        | Some attr, _ -> attr
-        | None, [%type: [%t? _] option] -> [%expr Ok None]
-        | None, _ ->
-          [%expr
+    match Attribute.get Attrs.default t with
+    | None -> [%expr Ok None]
+    | Some default -> 
+      (match t.pld_type with
+      | [%type: [%t? _] option] -> 
+        (* default *)
+        let default = [%expr ([%e default] : [%t t.pld_type])] in
+        [%expr Ok [%e default]]
+      | _ ->
+        [%expr
           Error
             (`Msg
               [%e
                 estring ~loc
-                  ("Didn't find the function for key: " ^ t.pld_name.txt)])] in
+                  ("Didn't find the function for key: " ^ t.pld_name.txt)])] )
+  in
   let e =
     [%expr
       function
