@@ -407,22 +407,18 @@ let of_yaml_record_to_expr ~loc fields =
           [%expr Error (`Msg (x ^ Yaml.to_string_exn y))];
       ]
   in
-  let option_to_none t = 
+  let option_to_none t =
     match Attribute.get Attrs.default t with
-    | None -> [%expr Ok None]
+    | None -> 
+      [%expr
+        Error
+          (`Msg
+            [%e
+              estring ~loc
+                ("Didn't find the function for key: " ^ t.pld_name.txt)])]
     | Some default -> 
-      (match t.pld_type with
-      | [%type: [%t? _] option] -> 
-        (* default *)
-        let default = [%expr ([%e default] : [%t t.pld_type])] in
+      let default = [%expr ([%e default] : [%t t.pld_type])] in
         [%expr Ok [%e default]]
-      | _ ->
-        [%expr
-          Error
-            (`Msg
-              [%e
-                estring ~loc
-                  ("Didn't find the function for key: " ^ t.pld_name.txt)])] )
   in
   let e =
     [%expr
