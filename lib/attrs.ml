@@ -11,8 +11,6 @@ let name =
     (fun x -> x)
 
 let default =
-  Attribute.declare
-    "yaml.default"
-    Attribute.Context.label_declaration
+  Attribute.declare "yaml.default" Attribute.Context.label_declaration
     Ast_pattern.(single_expr_payload __)
     (fun x -> x)

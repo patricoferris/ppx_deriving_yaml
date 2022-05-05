@@ -44,7 +44,7 @@ let test_primitives () =
   Alcotest.(check (result bool error))
     "(of_yaml) same bool" (Ok correct_bool_of) test_bool_of
 
-type person = { name : string [@default "Alice"]; age : int } [@@deriving yaml]
+type person = { name : string; [@default "Alice"] age : int } [@@deriving yaml]
 
 let pp_person ppf x =
   Format.pp_print_string ppf x.name;
@@ -78,9 +78,9 @@ let test_record_list () =
          `A
            [
               `O [ ("age", `Float 20.) ];
-             `O [ ("name", `String "Bob"); ("age", `Float 21.) ];
+              `O [ ("name", `String "Bob"); ("age", `Float 21.) ];
            ] );
-                 ]
+      ]
   in
   let test =
     users_to_yaml

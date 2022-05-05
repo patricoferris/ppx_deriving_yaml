@@ -395,8 +395,8 @@ let of_yaml_record_to_expr ~loc fields =
   in
   let option_to_none t =
     match Attribute.get Attrs.default t with
-    | None -> 
-      (match t.pld_type with
+    | None -> (
+      match t.pld_type with
       | [%type: [%t? _] option] -> [%expr Ok None]
       | _ ->
         [%expr
@@ -404,7 +404,8 @@ let of_yaml_record_to_expr ~loc fields =
             (`Msg
               [%e
                 estring ~loc
-                  ("Didn't find the function for key: " ^ t.pld_name.txt)])])
+                  ("Didn't find the function for key: " ^ t.pld_name.txt)])]
+      )
     | Some default -> 
       let default = [%expr ([%e default] : [%t t.pld_type])] in
         [%expr Ok [%e default]]
