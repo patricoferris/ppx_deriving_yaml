@@ -344,20 +344,6 @@ and polymorphic_function names expr =
     the possible values in a list. Once complete whatever the last value was is
     used in the construction of the record. *)
 
-(* let get_attribute attr ld ~f =
-    Option.map (Attribute.get attr ld) ~f:(fun x -> f x, Attribute.name attr)
-
-let create ~loc getters ld =
-            match ld.pld_type with
-             | [%type: [%t? _] option] -> [%expr Ok None]
-             | _ -> 
-              [%expr
-                Error
-                  (`Msg
-                    [%e
-                      estring ~loc
-                        ("Didn't find the function for key: " ^ ld.pld_name.txt)])] *)
-
 let of_yaml_record_to_expr ~loc fields =
   let monad_binding =
     List.fold_left (fun expr i ->
