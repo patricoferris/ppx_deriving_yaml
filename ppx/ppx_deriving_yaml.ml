@@ -47,7 +47,6 @@ let generate_impl ~ctxt (_rec_flag, type_decls) =
                      Option.value ~default:pcd_name.txt
                        (Attribute.get Attrs.name p)
                    in
-                   print_endline name;
                    match pcd_args with
                    | Pcstr_tuple args ->
                        let pat_arg =
