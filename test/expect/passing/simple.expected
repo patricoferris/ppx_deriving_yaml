@@ -1,0 +1,44 @@
+type t = {
+  name: string ;
+  age: int option }[@@deriving yaml]
+include
+  struct
+    let to_yaml (x : t) =
+      `O
+        [("name", (((fun (x : string) -> `String x)) x.name));
+        ("age",
+          (((function
+             | None -> `Null
+             | Some t -> ((fun (x : int) -> `Float (float_of_int x))) t))
+             x.age))]
+    let of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
+      function
+      | `O xs ->
+          let rec loop xs ((arg0, arg1) as _state) =
+            match xs with
+            | ("name", x)::xs ->
+                loop xs
+                  (((function | `String x -> Ok x | _ -> Error (`Msg "err"))
+                      x), arg1)
+            | ("age", x)::xs ->
+                loop xs
+                  (arg0,
+                    ((function
+                      | `Null -> Ok None
+                      | x ->
+                          ((function
+                            | `Float x -> Ok (int_of_float x)
+                            | _ -> Error (`Msg "err")) x) >>=
+                            ((fun x -> Ok (Some x)))) x))
+            | [] ->
+                arg1 >>=
+                  ((fun arg1 ->
+                      arg0 >>= (fun arg0 -> Ok { name = arg0; age = arg1 })))
+            | (x, y)::_ -> Error (`Msg (x ^ (Yaml.to_string_exn y))) in
+          loop xs
+            ((Error (`Msg "Didn't find the function for key: name")),
+              (Ok None))
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
