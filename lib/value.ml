@@ -343,6 +343,7 @@ and polymorphic_function names expr =
     The loop goes over the possible key-value pairs in the list and accumulates
     the possible values in a list. Once complete whatever the last value was is
     used in the construction of the record. *)
+
 let of_yaml_record_to_expr ~loc fields =
   let monad_binding =
     List.fold_left (fun expr i ->
@@ -393,15 +394,21 @@ let of_yaml_record_to_expr ~loc fields =
       ]
   in
   let option_to_none t =
-    match t.pld_type with
-    | [%type: [%t? _] option] -> [%expr Ok None]
-    | _ ->
-        [%expr
-          Error
-            (`Msg
-              [%e
-                estring ~loc
-                  ("Didn't find the function for key: " ^ t.pld_name.txt)])]
+    match Attribute.get Attrs.default t with
+    | None -> (
+        match t.pld_type with
+        | [%type: [%t? _] option] -> [%expr Ok None]
+        | _ ->
+            [%expr
+              Error
+                (`Msg
+                  [%e
+                    estring ~loc
+                      ("Didn't find the function for key: " ^ t.pld_name.txt)])]
+        )
+    | Some default ->
+        let default = [%expr ([%e default] : [%t t.pld_type])] in
+        [%expr Ok [%e default]]
   in
   let e =
     [%expr

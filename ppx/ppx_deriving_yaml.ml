@@ -196,7 +196,10 @@ let generate_intf ~ctxt (_rec_flag, type_decls) : Ppxlib.Ast.signature_item list
 
 let impl_generator =
   Deriving.Generator.V2.make_noarg
-    ~attributes:[ Attribute.T Attrs.name; Attribute.T Attrs.key ]
+    ~attributes:
+      [
+        Attribute.T Attrs.default; Attribute.T Attrs.name; Attribute.T Attrs.key;
+      ]
     generate_impl
 
 let intf_generator = Deriving.Generator.V2.make_noarg generate_intf

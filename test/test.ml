@@ -44,7 +44,7 @@ let test_primitives () =
   Alcotest.(check (result bool error))
     "(of_yaml) same bool" (Ok correct_bool_of) test_bool_of
 
-type person = { name : string; age : int } [@@deriving yaml]
+type person = { name : string; [@default "Alice"] age : int } [@@deriving yaml]
 
 let pp_person ppf x =
   Format.pp_print_string ppf x.name;
@@ -71,6 +71,17 @@ let test_record_list () =
             ] );
       ]
   in
+  let with_default_correct =
+    `O
+      [
+        ( "db",
+          `A
+            [
+              `O [ ("age", `Float 20.) ];
+              `O [ ("name", `String "Bob"); ("age", `Float 21.) ];
+            ] );
+      ]
+  in
   let test =
     users_to_yaml
       { db = [ { name = "Alice"; age = 20 }; { name = "Bob"; age = 21 } ] }
@@ -79,9 +90,12 @@ let test_record_list () =
     Ok { db = [ { name = "Alice"; age = 20 }; { name = "Bob"; age = 21 } ] }
   in
   let test_of = users_of_yaml correct in
+  let test_of_default = users_of_yaml with_default_correct in
   Alcotest.check yaml "(to_yaml) same object" correct test;
   Alcotest.(check (result users error))
-    "(of_yaml) same object" correct_of test_of
+    "(of_yaml) same object" correct_of test_of;
+  Alcotest.(check (result users error))
+    "(of_yaml) same object" correct_of test_of_default
 
 type tup = int * string * float [@@deriving yaml]
 
