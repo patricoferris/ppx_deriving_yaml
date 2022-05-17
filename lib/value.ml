@@ -158,8 +158,20 @@ let wrap_open_rresult ~loc expr =
     let ( >>= ) v f = match v with Ok v -> f v | Error _ as e -> e in
     [%e expr]]
 
-let mk_pat_match ~loc cases =
-  let cases = cases @ [ ([%pat? _], [%expr Error (`Msg "err")]) ] in
+let mk_pat_match ~loc cases typ =
+  let cases =
+    cases
+    @ [
+        ( [%pat? _],
+          [%expr
+            Error
+              (`Msg
+                [%e
+                  estring ~loc
+                    ("Was expecting '" ^ typ ^ "' but got a different type")])]
+        );
+      ]
+  in
   Exp.function_ (List.map (fun (pat, exp) -> Exp.case pat exp) cases)
 
 let monad_fold f =
@@ -183,18 +195,23 @@ let rec of_yaml_type_to_expr name typ =
         [
           ([%pat? `Float [%p argument]], [%expr Ok (int_of_float [%e expr_arg])]);
         ]
+        "int"
   | [%type: float] ->
       mk_pat_match ~loc
         [ ([%pat? `Float [%p argument]], [%expr Ok [%e expr_arg]]) ]
+        "float"
   | [%type: string] ->
       mk_pat_match ~loc
         [ ([%pat? `String [%p argument]], [%expr Ok [%e expr_arg]]) ]
+        "string"
   | [%type: bool] ->
       mk_pat_match ~loc
         [ ([%pat? `Bool [%p argument]], [%expr Ok [%e expr_arg]]) ]
+        "bool"
   | [%type: char] ->
       mk_pat_match ~loc
         [ ([%pat? `String [%p argument]], [%expr Ok [%e expr_arg].[0]]) ]
+        "char"
   | [%type: [%t? typ] list] ->
       mk_pat_match ~loc
         [
@@ -206,6 +223,7 @@ let rec of_yaml_type_to_expr name typ =
               [%e Helpers.map_bind ~loc] [%e of_yaml_type_to_expr None typ] lst]
           );
         ]
+        "list"
   | [%type: [%t? typ] array] ->
       mk_pat_match ~loc
         [
@@ -219,6 +237,7 @@ let rec of_yaml_type_to_expr name typ =
                   to_list ([%e Helpers.map_bind ~loc] [%e type_to_expr typ]))]
           );
         ]
+        "array"
   | [%type: Yaml.value] -> [%expr fun x -> Ok x]
   | [%type: [%t? typ] option] ->
       [%expr
@@ -265,7 +284,7 @@ let rec of_yaml_type_to_expr name typ =
                   (List.mapi (fun i _ -> evar ~loc (arg i)) typs)]]
           funcs
       in
-      wrap_open_rresult ~loc (mk_pat_match ~loc [ (list_pat, expr) ])
+      wrap_open_rresult ~loc (mk_pat_match ~loc [ (list_pat, expr) ] "null")
   | { ptyp_desc = Ptyp_variant (row_fields, _, _); _ } ->
       let cases =
         List.map
@@ -406,9 +425,7 @@ let of_yaml_record_to_expr ~loc fields =
                     estring ~loc
                       ("Didn't find the function for key: " ^ t.pld_name.txt)])]
         )
-    | Some default ->
-        let default = [%expr ([%e default] : [%t t.pld_type])] in
-        [%expr Ok [%e default]]
+    | Some default -> [%expr Ok [%e default]]
   in
   let e =
     [%expr
