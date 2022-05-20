@@ -19,7 +19,12 @@ include
             match xs with
             | ("name", x)::xs ->
                 loop xs
-                  (((function | `String x -> Ok x | _ -> Error (`Msg "err"))
+                  (((function
+                     | `String x -> Ok x
+                     | _ ->
+                         Error
+                           (`Msg
+                              "Was expecting 'string' but got a different type"))
                       x), arg1)
             | ("age", x)::xs ->
                 loop xs
@@ -29,8 +34,12 @@ include
                       | x ->
                           ((function
                             | `Float x -> Ok (int_of_float x)
-                            | _ -> Error (`Msg "err")) x) >>=
-                            ((fun x -> Ok (Some x)))) x))
+                            | _ ->
+                                Error
+                                  (`Msg
+                                     "Was expecting 'int' but got a different type"))
+                             x)
+                            >>= ((fun x -> Ok (Some x)))) x))
             | [] ->
                 arg1 >>=
                   ((fun arg1 ->
