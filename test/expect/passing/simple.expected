@@ -51,3 +51,35 @@ include
       | _ ->
           Error (`Msg "Failed building a key-value object expecting a list")
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type u = {
+  name: string [@default "Una"]}[@@deriving to_yaml]
+include
+  struct
+    let u_to_yaml (x : u) =
+      `O [("name", (((fun (x : string) -> `String x)) x.name))]
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type v = {
+  age: int [@key "AGE"][@default 10]}[@@deriving of_yaml]
+include
+  struct
+    let v_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
+      function
+      | `O xs ->
+          let rec loop xs (arg0 as _state) =
+            match xs with
+            | ("AGE", x)::xs ->
+                loop xs
+                  ((function
+                    | `Float x -> Ok (int_of_float x)
+                    | _ ->
+                        Error
+                          (`Msg
+                             "Was expecting 'int' but got a different type"))
+                     x)
+            | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
+            | (x, y)::_ -> Error (`Msg (x ^ (Yaml.to_string_exn y))) in
+          loop xs (Ok 10)
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
