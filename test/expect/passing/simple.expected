@@ -5,12 +5,14 @@ include
   struct
     let to_yaml (x : t) =
       `O
-        [("name", (((fun (x : string) -> `String x)) x.name));
-        ("age",
-          (((function
-             | None -> `Null
-             | Some t -> ((fun (x : int) -> `Float (float_of_int x))) t))
-             x.age))]
+        (List.filter_map (fun x -> x)
+           [Some ("name", (((fun (x : string) -> `String x)) x.name));
+           Some
+             ("age",
+               (((function
+                  | None -> `Null
+                  | Some t -> ((fun (x : int) -> `Float (float_of_int x))) t))
+                  x.age))])
     let of_yaml =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
       function
@@ -56,7 +58,13 @@ type u = {
 include
   struct
     let u_to_yaml (x : u) =
-      `O [("name", (((fun (x : string) -> `String x)) x.name))]
+      `O
+        (List.filter_map (fun x -> x)
+           [((fun x ->
+                if x = "Una"
+                then None
+                else Some ("name", (((fun (x : string) -> `String x)) x))))
+              x.name])
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type v = {
   age: int [@key "AGE"][@default 10]}[@@deriving of_yaml]
