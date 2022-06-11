@@ -118,12 +118,28 @@ let record_to_expr ~typ ~loc fields =
             (Located.lident ~loc pld_name.txt)
         in
         [%expr
-          [%e Ast_builder.Default.estring ~loc:pld_loc name],
-            [%e type_to_expr pld_type] [%e field]])
+          [%e
+            match Attribute.get Attrs.default pld with
+            | None ->
+                [%expr
+                  Some
+                    ( [%e Ast_builder.Default.estring ~loc:pld_loc name],
+                      [%e type_to_expr pld_type] [%e field] )]
+            | Some d ->
+                [%expr
+                  (fun x ->
+                    if x = [%e d] then None
+                    else
+                      Some
+                        ( [%e Ast_builder.Default.estring ~loc:pld_loc name],
+                          [%e type_to_expr pld_type] x ))
+                    [%e field]]]])
       fs
   in
   let fs = fields_to_expr fields in
-  [%expr fun (x : [%t typ]) -> `O [%e Ast_builder.Default.elist ~loc fs]]
+  [%expr
+    fun (x : [%t typ]) ->
+      `O (List.filter_map (fun x -> x) [%e Ast_builder.Default.elist ~loc fs])]
 
 let type_decl_to_type type_decl =
   let loc = type_decl.ptype_loc in

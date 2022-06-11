@@ -66,7 +66,7 @@ let test_record_list () =
         ( "db",
           `A
             [
-              `O [ ("name", `String "Alice"); ("age", `Float 20.) ];
+              `O [ ("age", `Float 20.) ];
               `O [ ("name", `String "Bob"); ("age", `Float 21.) ];
             ] );
       ]
