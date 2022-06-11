@@ -112,6 +112,11 @@ let record_to_expr ~typ ~loc fields =
         let name =
           Option.value ~default:pld_name.txt (Attribute.get Attrs.key pld)
         in
+        let func =
+          match Attribute.get Attrs.to_yaml pld with
+          | None -> type_to_expr pld_type
+          | Some fn -> fn
+        in
         let field =
           Exp.field
             (Ast_builder.Default.evar ~loc "x")
@@ -124,7 +129,7 @@ let record_to_expr ~typ ~loc fields =
                 [%expr
                   Some
                     ( [%e Ast_builder.Default.estring ~loc:pld_loc name],
-                      [%e type_to_expr pld_type] [%e field] )]
+                      [%e func] [%e field] )]
             | Some d ->
                 [%expr
                   (fun x ->
@@ -132,7 +137,7 @@ let record_to_expr ~typ ~loc fields =
                     else
                       Some
                         ( [%e Ast_builder.Default.estring ~loc:pld_loc name],
-                          [%e type_to_expr pld_type] x ))
+                          [%e func] x ))
                     [%e field]]]])
       fs
   in
@@ -408,9 +413,12 @@ let of_yaml_record_to_expr ~loc ~skip_unknown fields =
           List.mapi
             (fun j _ ->
               if i = j then
-                eapply ~loc
-                  (of_yaml_type_to_expr None f.pld_type)
-                  [ evar ~loc "x" ]
+                match Attribute.get Attrs.of_yaml f with
+                | Some fn -> eapply ~loc fn [ evar ~loc "x" ]
+                | None ->
+                    eapply ~loc
+                      (of_yaml_type_to_expr None f.pld_type)
+                      [ evar ~loc "x" ]
               else evar ~loc (arg j))
             fields
         in

@@ -179,11 +179,13 @@ let generate_impl_to_yaml ~ctxt (_rec_flag, type_decls) =
                pstr_value ~loc Nonrecursive
                  [
                    Vb.mk
-                     (ppat_var ~loc { loc; txt = to_yaml })
-                     (Helpers.poly_fun ~loc:ptype_loc typ_decl
-                        (Value.record_to_expr
-                           ~typ:(core_type_of_type_declaration typ_decl)
-                           ~loc:ptype_loc fields));
+                     [%pat? [%p ppat_var ~loc { loc; txt = to_yaml }]]
+                     [%expr
+                       [%e
+                         Helpers.poly_fun ~loc:ptype_loc typ_decl
+                           (Value.record_to_expr
+                              ~typ:(core_type_of_type_declaration typ_decl)
+                              ~loc:ptype_loc fields)]];
                  ];
              ]
          | _ ->
