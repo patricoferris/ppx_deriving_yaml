@@ -379,7 +379,7 @@ and polymorphic_function names expr =
     the possible values in a list. Once complete whatever the last value was is
     used in the construction of the record. *)
 
-let of_yaml_record_to_expr ~loc fields =
+let of_yaml_record_to_expr ~loc ~skip_unknown fields =
   let monad_binding =
     List.fold_left (fun expr i ->
         let loc = expr.pexp_loc in
@@ -423,9 +423,11 @@ let of_yaml_record_to_expr ~loc fields =
     kv_cases
     @ [
         Exp.case [%pat? []] base_case;
-        Exp.case
-          [%pat? (x, y) :: _]
-          [%expr Error (`Msg (x ^ Yaml.to_string_exn y))];
+        (if skip_unknown then Exp.case [%pat? _] base_case
+        else
+          Exp.case
+            [%pat? (x, y) :: _]
+            [%expr Error (`Msg (x ^ Yaml.to_string_exn y))]);
       ]
   in
   let option_to_none t =

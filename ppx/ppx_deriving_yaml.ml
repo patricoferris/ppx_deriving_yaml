@@ -9,7 +9,7 @@ let suf_of = Helpers.suf_of
 let mangle_name_label suff label =
   if label = "t" then suff else label ^ "_" ^ suff
 
-let generate_impl_of_yaml ~ctxt (_rec_flag, type_decls) =
+let generate_impl_of_yaml ~ctxt (_rec_flag, type_decls) skip_unknown =
   let loc = Expansion_context.Deriver.derived_item_loc ctxt in
   List.concat
     (List.map
@@ -101,7 +101,8 @@ let generate_impl_of_yaml ~ctxt (_rec_flag, type_decls) =
                    Vb.mk
                      (ppat_var ~loc { loc; txt = of_yaml })
                      (Helpers.poly_fun ~loc:ptype_loc typ_decl
-                        (Value.of_yaml_record_to_expr ~loc:ptype_loc fields));
+                        (Value.of_yaml_record_to_expr ~skip_unknown
+                           ~loc:ptype_loc fields));
                  ];
              ]
          | _ ->
@@ -231,7 +232,7 @@ let generate_intf_of_yaml ~ctxt (_rec_flag, type_decls) :
     type_decls
   |> List.concat
 
-let impl_generator impl =
+let impl_generator_to impl =
   Deriving.Generator.V2.make_noarg
     ~attributes:
       [
@@ -239,17 +240,26 @@ let impl_generator impl =
       ]
     impl
 
+let impl_generator_of impl =
+  Deriving.Generator.V2.make
+    ~attributes:
+      [
+        Attribute.T Attrs.default; Attribute.T Attrs.name; Attribute.T Attrs.key;
+      ]
+    Deriving.Args.(empty +> flag "skip_unknown")
+    impl
+
 let intf_generator intf = Deriving.Generator.V2.make_noarg intf
 
 let deriver =
   let of_yaml =
     Deriving.add "of_yaml"
-      ~str_type_decl:(impl_generator generate_impl_of_yaml)
+      ~str_type_decl:(impl_generator_of generate_impl_of_yaml)
       ~sig_type_decl:(intf_generator generate_intf_of_yaml)
   in
   let to_yaml =
     Deriving.add "to_yaml"
-      ~str_type_decl:(impl_generator generate_impl_to_yaml)
+      ~str_type_decl:(impl_generator_to generate_impl_to_yaml)
       ~sig_type_decl:(intf_generator generate_intf_to_yaml)
   in
   Deriving.add_alias "yaml" [ of_yaml; to_yaml ]
