@@ -91,3 +91,64 @@ include
       | _ ->
           Error (`Msg "Failed building a key-value object expecting a list")
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type w = {
+  age: int [@to_yaml fun i -> `Float (float_of_int (i - 10))]}[@@deriving
+                                                                yaml]
+include
+  struct
+    let w_to_yaml (x : w) =
+      `O
+        (List.filter_map (fun x -> x)
+           [Some ("age", (((fun i -> `Float (float_of_int (i - 10)))) x.age))])
+    let w_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
+      function
+      | `O xs ->
+          let rec loop xs (arg0 as _state) =
+            match xs with
+            | ("age", x)::xs ->
+                loop xs
+                  ((function
+                    | `Float x -> Ok (int_of_float x)
+                    | _ ->
+                        Error
+                          (`Msg
+                             "Was expecting 'int' but got a different type"))
+                     x)
+            | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
+            | (x, y)::_ -> Error (`Msg (x ^ (Yaml.to_string_exn y))) in
+          loop xs (Error (`Msg "Didn't find the function for key: age"))
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type x =
+  {
+  age: int
+    [@of_yaml
+      function
+      | `Float f -> Ok (int_of_float (f +. 10.))
+      | _ -> Error (`Msg "Expected a Yaml `Float")]}[@@deriving yaml]
+include
+  struct
+    let x_to_yaml (x : x) =
+      `O
+        (List.filter_map (fun x -> x)
+           [Some
+              ("age", (((fun (x : int) -> `Float (float_of_int x))) x.age))])
+    let x_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
+      function
+      | `O xs ->
+          let rec loop xs (arg0 as _state) =
+            match xs with
+            | ("age", x)::xs ->
+                loop xs
+                  ((function
+                    | `Float f -> Ok (int_of_float (f +. 10.))
+                    | _ -> Error (`Msg "Expected a Yaml `Float")) x)
+            | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
+            | (x, y)::_ -> Error (`Msg (x ^ (Yaml.to_string_exn y))) in
+          loop xs (Error (`Msg "Didn't find the function for key: age"))
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
