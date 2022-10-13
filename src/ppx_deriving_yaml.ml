@@ -1,7 +1,6 @@
 open Ppxlib
 open Ast_helper
 open Ast_builder.Default
-open Ppx_deriving_yaml_lib
 
 let suf_to = Helpers.suf_to
 let suf_of = Helpers.suf_of

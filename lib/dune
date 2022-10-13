@@ -1,6 +1,0 @@
-(library
- (name ppx_deriving_yaml_lib)
- (public_name ppx_deriving_yaml._lib)
- (libraries yaml ppxlib)
- (preprocess
-  (pps ppxlib.metaquot)))

@@ -16,7 +16,7 @@
 (package
  (name ppx_deriving_yaml)
  (synopsis "Yaml PPX Deriver")
- (description "Build Yaml types from OCaml types")
+ (description "Deriving conversion functions to and from yaml for your OCaml types.")
  (depends
   (alcotest :with-test)
   (bos :with-test)
@@ -26,6 +26,7 @@
    (>= 4.08.1))
   (ppxlib
    (>= 0.14.0))
+  ppx_deriving ; needed for https://github.com/ocaml/dune/issues/1327
   yaml))
 
 (using mdx 0.1)
