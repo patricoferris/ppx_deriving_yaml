@@ -1,4 +1,4 @@
-## v0.1.2 (13/10/2022)
+## v0.2.0 (14/10/2022)
 
 - Add custom `to_yaml` and `of_yaml` attributes (#38, @patricoferris)
 - Add `skip_unknown` flag to allow partially decoding yaml (#40, @code-ghalib)
