@@ -5,9 +5,10 @@ This ppx is based on [ppx_yojson](https://github.com/NathanReb/ppx_yojson) and [
 - [Basic Usage](#basic-usage)
 - [Attributes](#attributes)
   - [Key and Name](#key-and-name)
+  - [Default Values](#default-values)
   - [Custom encoding and decoding](#custom-encoding-and-decoding)
 - [Partially Decoding](#partially-decoding)
-  - [Implementation Details](#implementation-details)
+- [Implementation Details](#implementation-details)
 
 ## Basic Usage
 
@@ -85,6 +86,24 @@ Will produce Yaml of the form
 - : string Yaml.res = Ok "camel-name: Alice\n"
 ```
 
+### Default Values
+
+You can also specify default values for fields.
+
+```ocaml
+type t = {
+  name : string;
+  age : int [@default 42]
+}[@@deriving yaml]
+```
+
+These will be used in the absence of any fields when decoding yaml values into OCaml ones.
+
+```ocaml
+# Yaml.of_string_exn "name: Alice" |> of_yaml;;
+- : (t, [> `Msg of string ]) result = Ok {name = "Alice"; age = 42}
+```
+
 ### Custom encoding and decoding
 
 Sometimes you might want to specify your own encoding and decoding logic on field
@@ -144,7 +163,7 @@ type t = {
 - : (t, [> `Msg of string ]) result = Ok {name = "Bob"; age = 42}
 ```
 
-### Implementation Details 
+## Implementation Details 
 
 One important thing is that `'a option` values within records will return `None` if the Yaml you are trying to convert does not exist.
 
