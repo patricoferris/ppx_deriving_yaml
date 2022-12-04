@@ -8,7 +8,17 @@ let suf_of = Helpers.suf_of
 let mangle_name_label suff label =
   if label = "t" then suff else label ^ "_" ^ suff
 
-let generate_impl_of_yaml ~ctxt (_rec_flag, type_decls) skip_unknown =
+(* We need to check if a type is recursive or not in it's definition *)
+let check_rec_type rec_flag typ =
+  let check =
+    object
+      inherit type_is_recursive rec_flag typ
+    end
+  in
+  check#go
+
+let generate_impl_of_yaml ~ctxt (rec_flag, type_decls) skip_unknown =
+  let rec_flag = check_rec_type rec_flag type_decls () in
   let loc = Expansion_context.Deriver.derived_item_loc ctxt in
   List.concat
     (List.map
@@ -23,7 +33,7 @@ let generate_impl_of_yaml ~ctxt (_rec_flag, type_decls) skip_unknown =
                  in
                  let of_yaml = mangle_name_label suf_of ptype_name.txt in
                  [
-                   pstr_value ~loc Nonrecursive
+                   pstr_value ~loc rec_flag
                      [ Vb.mk (ppat_var ~loc { loc; txt = of_yaml }) ocamliser ];
                  ]
              | None ->
@@ -89,13 +99,13 @@ let generate_impl_of_yaml ~ctxt (_rec_flag, type_decls) skip_unknown =
                Value.wrap_open_rresult ~loc (Exp.function_ ~loc of_yaml_cases)
              in
              [
-               pstr_value ~loc Nonrecursive
+               pstr_value ~loc rec_flag
                  [ Vb.mk (ppat_var ~loc { loc; txt = of_yaml }) of_yaml_expr ];
              ]
          | { ptype_kind = Ptype_record fields; ptype_loc; ptype_name; _ } ->
              let of_yaml = mangle_name_label suf_of ptype_name.txt in
              [
-               pstr_value ~loc Nonrecursive
+               pstr_value ~loc rec_flag
                  [
                    Vb.mk
                      (ppat_var ~loc { loc; txt = of_yaml })
@@ -108,7 +118,8 @@ let generate_impl_of_yaml ~ctxt (_rec_flag, type_decls) skip_unknown =
              Location.raise_errorf ~loc "Cannot derive anything for this type")
        type_decls)
 
-let generate_impl_to_yaml ~ctxt (_rec_flag, type_decls) =
+let generate_impl_to_yaml ~ctxt (rec_flag, type_decls) =
+  let rec_flag = check_rec_type rec_flag type_decls () in
   let loc = Expansion_context.Deriver.derived_item_loc ctxt in
   List.concat
     (List.map
@@ -123,7 +134,7 @@ let generate_impl_to_yaml ~ctxt (_rec_flag, type_decls) =
                  in
                  let to_yaml = mangle_name_label suf_to ptype_name.txt in
                  [
-                   pstr_value ~loc Nonrecursive
+                   pstr_value ~loc rec_flag
                      [ Vb.mk (ppat_var ~loc { loc; txt = to_yaml }) yamliser ];
                  ]
              | None ->
@@ -169,13 +180,13 @@ let generate_impl_to_yaml ~ctxt (_rec_flag, type_decls) =
              in
              let to_yaml_expr = Exp.function_ ~loc to_yaml_cases in
              [
-               pstr_value ~loc Nonrecursive
+               pstr_value ~loc rec_flag
                  [ Vb.mk (ppat_var ~loc { loc; txt = to_yaml }) to_yaml_expr ];
              ]
          | { ptype_kind = Ptype_record fields; ptype_loc; ptype_name; _ } ->
              let to_yaml = mangle_name_label suf_to ptype_name.txt in
              [
-               pstr_value ~loc Nonrecursive
+               pstr_value ~loc rec_flag
                  [
                    Vb.mk
                      [%pat? [%p ppat_var ~loc { loc; txt = to_yaml }]]

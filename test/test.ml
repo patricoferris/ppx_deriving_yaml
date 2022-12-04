@@ -263,6 +263,18 @@ let test_unknown () =
   let expected = Ok { name = "Bob"; age = 42 } in
   Alcotest.(check (result unknown error)) "same unknown" expected v
 
+type recursive = { name : string; children : recursive list } [@@deriving yaml]
+
+let recursive = Alcotest.of_pp (fun ppf v -> Yaml.pp ppf (recursive_to_yaml v))
+
+let test_recursive () =
+  let yaml = "name: Bob\nchildren:\n  - name: Alice\n    children: []\n" in
+  let v = Yaml.of_string_exn yaml |> recursive_of_yaml in
+  let expected =
+    Ok { name = "Bob"; children = [ { name = "Alice"; children = [] } ] }
+  in
+  Alcotest.(check (result recursive error)) "same unknown" expected v
+
 let tests : unit Alcotest.test_case list =
   [
     ("test_primitives", `Quick, test_primitives);
@@ -273,6 +285,7 @@ let tests : unit Alcotest.test_case list =
     ("test_poly_variants", `Quick, test_poly_variants);
     ("test_attrib", `Quick, test_attrib);
     ("test_unknown", `Quick, test_unknown);
+    ("test_recursive", `Quick, test_recursive);
   ]
 
 let () = Alcotest.run "ppx_deriving_yaml" [ ("ppx", tests) ]

@@ -1,0 +1,63 @@
+type t = {
+  name: string ;
+  children: t list }[@@deriving yaml]
+include
+  struct
+    let rec to_yaml (x : t) =
+      `O
+        (List.filter_map (fun x -> x)
+           [Some ("name", (((fun (x : string) -> `String x)) x.name));
+           Some
+             ("children",
+               (((fun x -> `A (List.map (fun x -> to_yaml x) x))) x.children))])
+    let rec of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
+      function
+      | `O xs ->
+          let rec loop xs ((arg0, arg1) as _state) =
+            match xs with
+            | ("name", x)::xs ->
+                loop xs
+                  (((function
+                     | `String x -> Ok x
+                     | _ ->
+                         Error
+                           (`Msg
+                              "Was expecting 'string' but got a different type"))
+                      x), arg1)
+            | ("children", x)::xs ->
+                loop xs
+                  (arg0,
+                    ((function
+                      | `A lst ->
+                          let (>>=) v f =
+                            match v with | Ok v -> f v | Error _ as e -> e in
+                          ((fun f ->
+                              fun lst ->
+                                (List.fold_left
+                                   (fun acc ->
+                                      fun x ->
+                                        match acc with
+                                        | Ok acc ->
+                                            (f x) >>=
+                                              ((fun x -> Ok (x :: acc)))
+                                        | Error e -> Error e) (Ok []) lst)
+                                  >>= (fun lst -> Ok (List.rev lst))))
+                            (fun x -> of_yaml x) lst
+                      | _ ->
+                          Error
+                            (`Msg
+                               "Was expecting 'list' but got a different type"))
+                       x))
+            | [] ->
+                arg1 >>=
+                  ((fun arg1 ->
+                      arg0 >>=
+                        (fun arg0 -> Ok { name = arg0; children = arg1 })))
+            | (x, y)::_ -> Error (`Msg (x ^ (Yaml.to_string_exn y))) in
+          loop xs
+            ((Error (`Msg "Didn't find the function for key: name")),
+              (Error (`Msg "Didn't find the function for key: children")))
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
