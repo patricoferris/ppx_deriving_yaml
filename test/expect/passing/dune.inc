@@ -1,3 +1,35 @@
+; -------- Test: `recursive.ml` --------
+
+; The PPX-dependent executable under test
+(executable
+ (name recursive)
+ (modules recursive)
+ (preprocess (pps ppx_deriving_yaml))
+ (libraries yaml))
+
+; Run the PPX on the `.ml` file
+(rule
+ (targets recursive.actual)
+ (deps
+  (:pp pp.exe)
+  (:input recursive.ml))
+ (action
+  (run ./%{pp} -deriving-keep-w32 both --impl %{input} -o %{targets})))
+
+; Compare the post-processed output to the .expected file
+(rule
+ (alias runtest)
+ (package ppx_deriving_yaml)
+ (action
+  (diff recursive.expected recursive.actual)))
+
+; Ensure that the post-processed executable runs correctly
+(rule
+ (alias runtest)
+ (package ppx_deriving_yaml)
+ (action
+  (run ./recursive.exe)))
+
 ; -------- Test: `simple.ml` --------
 
 ; The PPX-dependent executable under test
