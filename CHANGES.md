@@ -1,3 +1,8 @@
+## v0.2.1 (04/12/2022) Cambridge
+
+ - Support types with recursive definitions (#46, @patricoferris)
+ - Fix `skip_unknown` flag when unknown fields are not last in the record (#43, @code-ghalib)
+
 ## v0.2.0 (14/10/2022)
 
 - Add custom `to_yaml` and `of_yaml` attributes (#38, @patricoferris)
