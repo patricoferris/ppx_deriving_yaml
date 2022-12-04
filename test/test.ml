@@ -253,6 +253,16 @@ let test_attrib () =
   Alcotest.(check (result rattrib error))
     "(of_yaml) same record" correct_yaml_r_of test_yaml_r_of
 
+type unknown = { name : string; age : int } [@@deriving yaml ~skip_unknown]
+
+let unknown = Alcotest.of_pp (fun ppf v -> Yaml.pp ppf (unknown_to_yaml v))
+
+let test_unknown () =
+  let yaml = "name: Bob\nmisc: We don't need this!\nage: 42" in
+  let v = Yaml.of_string_exn yaml |> unknown_of_yaml in
+  let expected = Ok { name = "Bob"; age = 42 } in
+  Alcotest.(check (result unknown error)) "same unknown" expected v
+
 let tests : unit Alcotest.test_case list =
   [
     ("test_primitives", `Quick, test_primitives);
@@ -262,6 +272,7 @@ let tests : unit Alcotest.test_case list =
     ("test_var", `Quick, test_var);
     ("test_poly_variants", `Quick, test_poly_variants);
     ("test_attrib", `Quick, test_attrib);
+    ("test_unknown", `Quick, test_unknown);
   ]
 
-let () = Alcotest.run "PPX_Deriving_Yaml" [ ("ppx", tests) ]
+let () = Alcotest.run "ppx_deriving_yaml" [ ("ppx", tests) ]
