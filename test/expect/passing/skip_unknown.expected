@@ -32,10 +32,7 @@ include
                 arg1 >>=
                   ((fun arg1 ->
                       arg0 >>= (fun arg0 -> Ok { name = arg0; age = arg1 })))
-            | _ ->
-                arg1 >>=
-                  ((fun arg1 ->
-                      arg0 >>= (fun arg0 -> Ok { name = arg0; age = arg1 }))) in
+            | _::xs -> loop xs _state in
           loop xs
             ((Error (`Msg "Didn't find the function for key: name")),
               (Error (`Msg "Didn't find the function for key: age")))

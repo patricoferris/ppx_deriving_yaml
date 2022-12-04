@@ -431,7 +431,7 @@ let of_yaml_record_to_expr ~loc ~skip_unknown fields =
     kv_cases
     @ [
         Exp.case [%pat? []] base_case;
-        (if skip_unknown then Exp.case [%pat? _] base_case
+        (if skip_unknown then Exp.case [%pat? _ :: xs] [%expr loop xs _state]
         else
           Exp.case
             [%pat? (x, y) :: _]
