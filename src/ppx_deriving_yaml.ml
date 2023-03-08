@@ -37,7 +37,7 @@ let generate_impl_of_yaml ~ctxt (rec_flag, type_decls) skip_unknown =
                      [ Vb.mk (ppat_var ~loc { loc; txt = of_yaml }) ocamliser ];
                  ]
              | None ->
-                 Location.raise_errorf ~loc
+                 Expn.Error.raise_errorf ~loc
                    "Cannot derive anything for this type")
          | { ptype_kind = Ptype_variant constructors; ptype_name; _ } ->
              let of_yaml = mangle_name_label suf_of ptype_name.txt in
@@ -115,7 +115,7 @@ let generate_impl_of_yaml ~ctxt (rec_flag, type_decls) skip_unknown =
                  ];
              ]
          | _ ->
-             Location.raise_errorf ~loc "Cannot derive anything for this type")
+             Expn.Error.raise_errorf ~loc "Cannot derive anything for this type")
        type_decls)
 
 let generate_impl_to_yaml ~ctxt (rec_flag, type_decls) =
@@ -138,7 +138,7 @@ let generate_impl_to_yaml ~ctxt (rec_flag, type_decls) =
                      [ Vb.mk (ppat_var ~loc { loc; txt = to_yaml }) yamliser ];
                  ]
              | None ->
-                 Location.raise_errorf ~loc
+                 Expn.Error.raise_errorf ~loc
                    "Cannot derive anything for this type")
          | { ptype_kind = Ptype_variant constructors; ptype_name; _ } ->
              let to_yaml = mangle_name_label suf_to ptype_name.txt in
@@ -199,7 +199,7 @@ let generate_impl_to_yaml ~ctxt (rec_flag, type_decls) =
                  ];
              ]
          | _ ->
-             Location.raise_errorf ~loc "Cannot derive anything for this type")
+             Expn.Error.raise_errorf ~loc "Cannot derive anything for this type")
        type_decls)
 
 let generate_intf_to_yaml ~ctxt (_rec_flag, type_decls) :
@@ -219,7 +219,7 @@ let generate_intf_to_yaml ~ctxt (_rec_flag, type_decls) :
                  }
                  (Value.type_decl_to_type typ_decl));
           ]
-      | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type")
+      | _ -> Expn.Error.raise_errorf ~loc "Cannot derive anything for this type")
     type_decls
   |> List.concat
 
@@ -240,7 +240,7 @@ let generate_intf_of_yaml ~ctxt (_rec_flag, type_decls) :
                  }
                  (Value.type_decl_of_type typ_decl));
           ]
-      | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type")
+      | _ -> Expn.Error.raise_errorf ~loc "Cannot derive anything for this type")
     type_decls
   |> List.concat
 
