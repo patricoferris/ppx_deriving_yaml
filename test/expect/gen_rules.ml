@@ -7,7 +7,7 @@ let ppx_fail_global_stanzas () =
     (env-vars
      (OCAML_ERROR_STYLE "short")
      (OCAML_COLOR "never"))))
-  
+
   |}
 
 let output_stanzas ~expect_failure filename =
@@ -26,13 +26,12 @@ let output_stanzas ~expect_failure filename =
     let pp_action ppf expect_failure =
       Format.fprintf ppf
         (if expect_failure then
-         "; expect the process to fail, capturing stderr@,\
-          @[<v 1>(with-stderr-to@,\
-          %%{targets}@,\
-          (bash \"! ./%%{pp} -no-color --impl %%{input}\"))@]"
-        else
-          "(run ./%%{pp} -deriving-keep-w32 both --impl %%{input} -o \
-           %%{targets})")
+           "@[<v 1>(with-stdout-to@,\
+            %%{targets}@,\
+            (bash \"./%%{pp} -no-color --impl %%{input}\"))@]"
+         else
+           "(run ./%%{pp} -deriving-keep-w32 both --impl %%{input} -o \
+            %%{targets})")
     in
     Format.fprintf ppf
       "; Run the PPX on the `.ml` file@,\

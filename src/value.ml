@@ -51,46 +51,80 @@ let rec type_to_expr typ =
                    typs)]]
       in
       [%expr fun [%p tuple_pattern] -> [%e list_apps]]
-  | { ptyp_desc = Ptyp_variant (row_fields, _, _); _ } ->
+  | { ptyp_desc = Ptyp_variant (row_fields, _, _); _ } -> (
       let cases =
-        List.map
-          (fun (field : row_field) ->
-            match field.prf_desc with
-            | Rtag (label, true, []) ->
-                Exp.case
-                  (Pat.variant label.txt None)
-                  [%expr `O [ ([%e estring ~loc label.txt], `A []) ]]
-            | Rtag (label, false, [ { ptyp_desc = Ptyp_tuple typs; _ } ]) ->
-                Exp.case
-                  (Pat.variant label.txt
-                     (Some
-                        (Helpers.ptuple ~loc
-                           (List.mapi (fun i _ -> pvar ~loc (arg i)) typs))))
-                  [%expr
-                    `O
-                      [
-                        ( [%e estring ~loc label.txt],
-                          `A
-                            [%e
-                              elist ~loc
-                                (List.mapi
-                                   (fun i t ->
-                                     [%expr
-                                       [%e type_to_expr t]
-                                         [%e evar ~loc (arg i)]])
-                                   typs)] );
-                      ]]
-            | Rtag (label, false, [ t ]) ->
-                Exp.case
-                  (Pat.variant ~loc label.txt (Some (pvar ~loc "x")))
-                  [%expr
-                    [%e type_to_expr t] [%e evar ~loc "x"] |> fun x ->
-                    `O [ ([%e estring ~loc label.txt], `A [ x ]) ]]
-            | _ -> failwith "Not implemented")
-          row_fields
+        let exception Failed_to_derive of location * string in
+        try
+          let l =
+            List.map
+              (fun (field : row_field) ->
+                match field.prf_desc with
+                | Rtag (label, true, []) ->
+                    Exp.case
+                      (Pat.variant label.txt None)
+                      [%expr `O [ ([%e estring ~loc label.txt], `A []) ]]
+                | Rtag (label, false, [ { ptyp_desc = Ptyp_tuple typs; _ } ]) ->
+                    Exp.case
+                      (Pat.variant label.txt
+                         (Some
+                            (Helpers.ptuple ~loc
+                               (List.mapi (fun i _ -> pvar ~loc (arg i)) typs))))
+                      [%expr
+                        `O
+                          [
+                            ( [%e estring ~loc label.txt],
+                              `A
+                                [%e
+                                  elist ~loc
+                                    (List.mapi
+                                       (fun i t ->
+                                         [%expr
+                                           [%e type_to_expr t]
+                                             [%e evar ~loc (arg i)]])
+                                       typs)] );
+                          ]]
+                | Rtag (label, false, [ t ]) ->
+                    Exp.case
+                      (Pat.variant ~loc label.txt (Some (pvar ~loc "x")))
+                      [%expr
+                        [%e type_to_expr t] [%e evar ~loc "x"] |> fun x ->
+                        `O [ ([%e estring ~loc label.txt], `A [ x ]) ]]
+                | Rtag (label, _, _) ->
+                    raise (Failed_to_derive (label.loc, "Rtag"))
+                | Rinherit ctype ->
+                    Exp.case
+                      (Pat.variant ~loc "e" (Some (pvar ~loc "x")))
+                      (type_to_expr ctype))
+              row_fields
+          in
+          Ok l
+        with Failed_to_derive (l, s) -> Error (`Msg (l, s))
       in
-      Exp.function_ ~loc cases
-  | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type"
+      match cases with
+      | Error (`Msg (loc, m)) ->
+          pexp_extension ~loc @@ Location.error_extensionf ~loc "%s" m
+      | Ok cases -> Exp.function_ ~loc cases)
+  | { ptyp_desc = Ptyp_arrow _; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Functions cannot be converted yaml"
+  | { ptyp_desc = Ptyp_object _; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Objects cannot be converted yaml"
+  | { ptyp_desc = Ptyp_class _; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Classes cannot be converted yaml"
+  | { ptyp_desc = Ptyp_any; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Any cannot be converted yaml"
+  | { ptyp_desc = Ptyp_package _; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Packages cannot be converted yaml"
+  | { ptyp_desc = Ptyp_alias _; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Aliases cannot be converted yaml"
+  | { ptyp_desc = Ptyp_extension _; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Extensions cannot be converted yaml"
 
 and function_app f l =
   if l = [] then f
@@ -359,7 +393,27 @@ let rec of_yaml_type_to_expr name typ =
                  [%pat? _]
                  [%expr Error (`Msg "failed converting variant")];
              ]))
-  | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type"
+  | { ptyp_desc = Ptyp_arrow _; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Functions cannot be converted yaml"
+  | { ptyp_desc = Ptyp_object _; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Objects cannot be converted yaml"
+  | { ptyp_desc = Ptyp_class _; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Classes cannot be converted yaml"
+  | { ptyp_desc = Ptyp_any; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Any cannot be converted yaml"
+  | { ptyp_desc = Ptyp_package _; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Packages cannot be converted yaml"
+  | { ptyp_desc = Ptyp_alias _; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Aliases cannot be converted yaml"
+  | { ptyp_desc = Ptyp_extension _; _ } ->
+      pexp_extension ~loc
+      @@ Location.error_extensionf ~loc "Extensions cannot be converted yaml"
 
 and function_appl f l =
   if l = [] then f
@@ -432,10 +486,10 @@ let of_yaml_record_to_expr ~loc ~skip_unknown fields =
     @ [
         Exp.case [%pat? []] base_case;
         (if skip_unknown then Exp.case [%pat? _ :: xs] [%expr loop xs _state]
-        else
-          Exp.case
-            [%pat? (x, y) :: _]
-            [%expr Error (`Msg (x ^ Yaml.to_string_exn y))]);
+         else
+           Exp.case
+             [%pat? (x, y) :: _]
+             [%expr Error (`Msg (x ^ Yaml.to_string_exn y))]);
       ]
   in
   let option_to_none t =
