@@ -2,6 +2,9 @@ open Ppxlib
 open Ast_helper
 open Ast_builder.Default
 
+exception Failed_to_derive of location * string
+
+let failed_to_derive loc msg = raise (Failed_to_derive (loc, msg))
 let suf_to = Helpers.suf_to
 let suf_of = Helpers.suf_of
 
@@ -37,66 +40,90 @@ let generate_impl_of_yaml ~ctxt (rec_flag, type_decls) skip_unknown =
                      [ Vb.mk (ppat_var ~loc { loc; txt = of_yaml }) ocamliser ];
                  ]
              | None ->
-                 Location.raise_errorf ~loc
-                   "Cannot derive anything for this type")
+                 [
+                   pstr_value ~loc rec_flag
+                     [
+                       Vb.mk
+                         (ppat_var ~loc { loc; txt = "error_encountered" })
+                         (pexp_extension ~loc
+                         @@ Location.error_extensionf ~loc
+                              "Failed to derive something for an abstract type \
+                               with no manifest!");
+                     ];
+                 ])
          | { ptype_kind = Ptype_variant constructors; ptype_name; _ } ->
              let of_yaml = mangle_name_label suf_of ptype_name.txt in
              let of_yaml_cases =
-               List.map
-                 (fun ({ pcd_name; pcd_args; _ } as p) ->
-                   let name =
-                     Option.value ~default:pcd_name.txt
-                       (Attribute.get Attrs.name p)
-                   in
-                   match pcd_args with
-                   | Pcstr_tuple args ->
-                       let tuple =
-                         if List.length args = 0 then None
-                         else
-                           Some
-                             (Helpers.etuple ~loc
-                                (List.mapi
-                                   (fun i _ -> evar ~loc (Helpers.arg i))
-                                   args))
-                       in
-                       Exp.case
-                         [%pat?
-                           `O
-                             [
-                               ( [%p pstring ~loc name],
-                                 `A
-                                   [%p
-                                     plist ~loc
-                                       (List.mapi
-                                          (fun i _ -> pvar ~loc (Helpers.arg i))
-                                          args)] );
-                             ]]
-                         Value.(
-                           monad_fold
-                             (of_yaml_type_to_expr None)
-                             [%expr
-                               Result.Ok
-                                 [%e
-                                   Exp.construct
-                                     {
-                                       txt = Lident pcd_name.txt;
-                                       loc = pcd_name.loc;
-                                     }
-                                     tuple]]
-                             (List.mapi (fun i t -> (t, i)) args))
-                   | _ -> failwith "Not implemented!")
-                 constructors
+               let l =
+                 List.map
+                   (fun ({ pcd_name; pcd_args; _ } as p) ->
+                     let name =
+                       Option.value ~default:pcd_name.txt
+                         (Attribute.get Attrs.name p)
+                     in
+                     match pcd_args with
+                     | Pcstr_tuple args ->
+                         let tuple =
+                           if List.length args = 0 then None
+                           else
+                             Some
+                               (Helpers.etuple ~loc
+                                  (List.mapi
+                                     (fun i _ -> evar ~loc (Helpers.arg i))
+                                     args))
+                         in
+                         Exp.case
+                           [%pat?
+                             `O
+                               [
+                                 ( [%p pstring ~loc name],
+                                   `A
+                                     [%p
+                                       plist ~loc
+                                         (List.mapi
+                                            (fun i _ ->
+                                              pvar ~loc (Helpers.arg i))
+                                            args)] );
+                               ]]
+                           Value.(
+                             monad_fold
+                               (of_yaml_type_to_expr None)
+                               [%expr
+                                 Result.Ok
+                                   [%e
+                                     Exp.construct
+                                       {
+                                         txt = Lident pcd_name.txt;
+                                         loc = pcd_name.loc;
+                                       }
+                                       tuple]]
+                               (List.mapi (fun i t -> (t, i)) args))
+                     | _ -> failed_to_derive loc "Failed to derive variant")
+                   constructors
+               in
+               Ok l
              in
              let of_yaml_cases =
-               of_yaml_cases
-               @ [
-                   Exp.case
-                     [%pat? _]
-                     [%expr Error (`Msg "no match for this variant expression")];
-                 ]
+               match of_yaml_cases with
+               | Error _ as e -> e
+               | Ok cases ->
+                   Ok
+                     (cases
+                     @ [
+                         Exp.case
+                           [%pat? _]
+                           [%expr
+                             Error (`Msg "no match for this variant expression")];
+                       ])
              in
              let of_yaml_expr =
-               Value.wrap_open_rresult ~loc (Exp.function_ ~loc of_yaml_cases)
+               match of_yaml_cases with
+               | Error (loc, msg) ->
+                   pexp_extension ~loc
+                   @@ Location.error_extensionf ~loc "%s" msg
+               | Ok of_yaml_cases ->
+                   Value.wrap_open_rresult ~loc
+                     (Exp.function_ ~loc of_yaml_cases)
              in
              [
                pstr_value ~loc rec_flag
@@ -115,8 +142,26 @@ let generate_impl_of_yaml ~ctxt (rec_flag, type_decls) skip_unknown =
                  ];
              ]
          | _ ->
-             Location.raise_errorf ~loc "Cannot derive anything for this type")
+             [
+               pstr_value ~loc rec_flag
+                 [
+                   Vb.mk (ppat_var ~loc { loc; txt = "error" })
+                   @@ pexp_extension ~loc
+                   @@ Location.error_extensionf ~loc
+                        "Cannot derive anything for this type";
+                 ];
+             ])
        type_decls)
+
+let vb_error loc msg =
+  [
+    pstr_value ~loc Nonrecursive
+      [
+        Vb.mk
+          (ppat_var ~loc { loc; txt = "error_encountered" })
+          (pexp_extension ~loc @@ Location.error_extensionf ~loc "%s" msg);
+      ];
+  ]
 
 let generate_impl_to_yaml ~ctxt (rec_flag, type_decls) =
   let rec_flag = check_rec_type rec_flag type_decls () in
@@ -137,48 +182,58 @@ let generate_impl_to_yaml ~ctxt (rec_flag, type_decls) =
                    pstr_value ~loc rec_flag
                      [ Vb.mk (ppat_var ~loc { loc; txt = to_yaml }) yamliser ];
                  ]
-             | None ->
-                 Location.raise_errorf ~loc
-                   "Cannot derive anything for this type")
+             | None -> vb_error loc "Cannot derive anything for this type")
          | { ptype_kind = Ptype_variant constructors; ptype_name; _ } ->
              let to_yaml = mangle_name_label suf_to ptype_name.txt in
              let to_yaml_cases =
-               List.map
-                 (fun ({ pcd_name; pcd_args; _ } as p) ->
-                   let name =
-                     Option.value ~default:pcd_name.txt
-                       (Attribute.get Attrs.name p)
-                   in
-                   match pcd_args with
-                   | Pcstr_tuple args ->
-                       let pat_arg =
-                         if List.length args = 0 then None
-                         else
-                           Some
-                             (Helpers.ptuple ~loc
-                                (List.mapi
-                                   (fun i _ -> pvar ~loc (Helpers.arg i))
-                                   args))
+               try
+                 let l =
+                   List.map
+                     (fun ({ pcd_name; pcd_args; _ } as p) ->
+                       let name =
+                         Option.value ~default:pcd_name.txt
+                           (Attribute.get Attrs.name p)
                        in
-                       Exp.case (pconstruct p pat_arg)
-                         [%expr
-                           `O
-                             [
-                               ( [%e estring ~loc name],
-                                 `A
-                                   [%e
-                                     elist ~loc
-                                       (List.mapi
-                                          (fun i t ->
-                                            [%expr
-                                              [%e Value.type_to_expr t]
-                                                [%e evar ~loc (Helpers.arg i)]])
-                                          args)] );
-                             ]]
-                   | _ -> failwith "Not implemented!")
-                 constructors
+                       match pcd_args with
+                       | Pcstr_tuple args ->
+                           let pat_arg =
+                             if List.length args = 0 then None
+                             else
+                               Some
+                                 (Helpers.ptuple ~loc
+                                    (List.mapi
+                                       (fun i _ -> pvar ~loc (Helpers.arg i))
+                                       args))
+                           in
+                           Exp.case (pconstruct p pat_arg)
+                             [%expr
+                               `O
+                                 [
+                                   ( [%e estring ~loc name],
+                                     `A
+                                       [%e
+                                         elist ~loc
+                                           (List.mapi
+                                              (fun i t ->
+                                                [%expr
+                                                  [%e Value.type_to_expr t]
+                                                    [%e
+                                                      evar ~loc (Helpers.arg i)]])
+                                              args)] );
+                                 ]]
+                       | _ -> failwith "Not implemented!")
+                     constructors
+                 in
+                 Ok l
+               with Failed_to_derive (loc, msg) -> Error (`Msg (loc, msg))
              in
-             let to_yaml_expr = Exp.function_ ~loc to_yaml_cases in
+             let to_yaml_expr =
+               match to_yaml_cases with
+               | Error (`Msg (loc, msg)) ->
+                   pexp_extension ~loc
+                   @@ Location.error_extensionf ~loc "%s" msg
+               | Ok to_yaml_cases -> Exp.function_ ~loc to_yaml_cases
+             in
              [
                pstr_value ~loc rec_flag
                  [ Vb.mk (ppat_var ~loc { loc; txt = to_yaml }) to_yaml_expr ];
@@ -198,8 +253,7 @@ let generate_impl_to_yaml ~ctxt (rec_flag, type_decls) =
                               ~loc:ptype_loc fields)]];
                  ];
              ]
-         | _ ->
-             Location.raise_errorf ~loc "Cannot derive anything for this type")
+         | _ -> vb_error loc "Cannot derive anything for this type")
        type_decls)
 
 let generate_intf_to_yaml ~ctxt (_rec_flag, type_decls) :
@@ -219,7 +273,15 @@ let generate_intf_to_yaml ~ctxt (_rec_flag, type_decls) :
                  }
                  (Value.type_decl_to_type typ_decl));
           ]
-      | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type")
+      | _ ->
+          [
+            psig_value ~loc
+              (Val.mk
+                 { loc; txt = "error_encountered" }
+                 (ptyp_extension ~loc
+                 @@ Location.error_extensionf ~loc
+                      "Cannot derived\n          anything"));
+          ])
     type_decls
   |> List.concat
 
@@ -240,7 +302,15 @@ let generate_intf_of_yaml ~ctxt (_rec_flag, type_decls) :
                  }
                  (Value.type_decl_of_type typ_decl));
           ]
-      | _ -> Location.raise_errorf ~loc "Cannot derive anything for this type")
+      | _ ->
+          [
+            psig_value ~loc
+              (Val.mk
+                 { loc; txt = "error_encountered" }
+                 (ptyp_extension ~loc
+                 @@ Location.error_extensionf ~loc
+                      "Cannot derived\n          anything"));
+          ])
     type_decls
   |> List.concat
 

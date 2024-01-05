@@ -1,0 +1,38 @@
+type t = int -> int[@@deriving yaml]
+include
+  struct
+    let to_yaml = [%ocaml.error "Functions cannot be converted yaml"]
+    let of_yaml = [%ocaml.error "Functions cannot be converted yaml"]
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type u = int -> int[@@deriving yaml]
+include
+  struct
+    let u_to_yaml = [%ocaml.error "Functions cannot be converted yaml"]
+    let u_of_yaml = [%ocaml.error "Functions cannot be converted yaml"]
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type v = int[@@deriving yaml]
+include
+  struct
+    let v_to_yaml (x : int) = `Float (float_of_int x)
+    let v_of_yaml =
+      function
+      | `Float x -> Ok (int_of_float x)
+      | _ -> Error (`Msg "Was expecting 'int' but got a different type")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type w = ..[@@deriving yaml]
+include
+  struct
+    let error_encountered =
+      [%ocaml.error "Cannot derive anything for this type"]
+    let error = [%ocaml.error "Cannot derive anything for this type"]
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type x[@@deriving yaml]
+include
+  struct
+    let error_encountered =
+      [%ocaml.error "Cannot derive anything for this type"]
+    let error_encountered =
+      [%ocaml.error
+        "Failed to derive something for an abstract type with no manifest!"]
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+let _ = v_of_yaml
