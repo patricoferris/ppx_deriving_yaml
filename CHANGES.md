@@ -1,3 +1,8 @@
+## v0.2.2 (05/01/2024) Cambridge
+
+ - Embed errors in the AST (#51, @patricoferris and special thanks to @panglesd
+   for the detailed issue in #48)
+
 ## v0.2.1 (04/12/2022) Cambridge
 
  - Support types with recursive definitions (#46, @patricoferris)
