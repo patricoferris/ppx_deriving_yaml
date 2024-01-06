@@ -111,15 +111,15 @@ by field basis. To do so, you can use the `of_yaml` and `to_yaml` attributes.
 
 ```ocaml
 type t = {
-  age : int [@to_yaml fun i -> `Float (float_of_int (i + 1))]
+  name : string [@to_yaml fun i -> `String ("custom-" ^ i)]
 }[@@deriving yaml]
 ```
 
 The `to_yaml` function will use the custom encoder now instead.
 
 ```ocaml
-# Yaml.to_string_exn (to_yaml { age = 41 });;
-- : string = "age: 42\n"
+# Yaml.to_string_exn (to_yaml { name = "alice" });;
+- : string = "name: custom-alice\n"
 ```
 
 ## Partially Decoding
