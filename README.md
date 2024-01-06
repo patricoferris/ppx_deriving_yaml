@@ -82,8 +82,8 @@ type t = {
 Will produce Yaml of the form 
 
 ```ocaml
-# Yaml.to_string (to_yaml { camel_name = "Alice" });;
-- : string Yaml.res = Ok "camel-name: Alice\n"
+# Yaml.to_string_exn (to_yaml { camel_name = "Alice" });;
+- : string = "camel-name: Alice\n"
 ```
 
 ### Default Values
@@ -118,8 +118,8 @@ type t = {
 The `to_yaml` function will use the custom encoder now instead.
 
 ```ocaml
-# Yaml.to_string (to_yaml { age = 41 });;
-- : string Yaml.res = Ok "age: 42\n"
+# Yaml.to_string_exn (to_yaml { age = 41 });;
+- : string = "age: 42\n"
 ```
 
 ## Partially Decoding
