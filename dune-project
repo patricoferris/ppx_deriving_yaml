@@ -21,7 +21,7 @@
   yaml
   ppx_deriving ; needed for https://github.com/ocaml/dune/issues/1327
   (alcotest :with-test)
-  (mdx :with-test)
+  (mdx (and :with-test (>= 2.0.0)))
   (ocaml
    (>= 4.08.1))
   (ppxlib

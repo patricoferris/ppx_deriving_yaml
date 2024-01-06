@@ -13,7 +13,7 @@ depends: [
   "yaml"
   "ppx_deriving"
   "alcotest" {with-test}
-  "mdx" {with-test}
+  "mdx" {with-test & >= "2.0.0"}
   "ocaml" {>= "4.08.1"}
   "ppxlib" {>= "0.25.0"}
   "odoc" {with-doc}
