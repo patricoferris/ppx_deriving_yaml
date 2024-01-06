@@ -15,6 +15,11 @@ let default =
     Ast_pattern.(single_expr_payload __)
     (fun x -> x)
 
+let inline =
+  Attribute.declare "yaml.inline" Attribute.Context.label_declaration
+    Ast_pattern.(pstr nil)
+    ()
+
 let to_yaml =
   Attribute.declare "yaml.to_yaml" Attribute.Context.label_declaration
     Ast_pattern.(single_expr_payload __)

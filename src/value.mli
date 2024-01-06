@@ -1,6 +1,8 @@
 open Ppxlib
 (** {1 Functions for converting OCaml types to Yaml.value types} *)
 
+type record_mapper = (string, label_declaration list) Hashtbl.t
+
 val type_to_expr : core_type -> expression
 
 val record_to_expr :
@@ -11,7 +13,12 @@ val type_decl_of_type : type_declaration -> core_type
 val of_yaml_type_to_expr : string option -> core_type -> expression
 
 val of_yaml_record_to_expr :
-  loc:Location.t -> skip_unknown:bool -> label_declaration list -> expression
+  lookup:record_mapper ->
+  loc:Location.t ->
+  skip_unknown:bool ->
+  label:string ->
+  label_declaration list ->
+  expression
 
 val monad_fold :
   ('a -> expression) -> expression -> ('a * int) list -> expression

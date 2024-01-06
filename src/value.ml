@@ -438,7 +438,10 @@ and polymorphic_function names expr =
     the possible values in a list. Once complete whatever the last value was is
     used in the construction of the record. *)
 
-let of_yaml_record_to_expr ~loc ~skip_unknown fields =
+type record_mapper = (string, label_declaration list) Hashtbl.t
+
+let of_yaml_record_to_expr ~(lookup : record_mapper) ~loc ~skip_unknown ~label
+    fields =
   let monad_binding =
     List.fold_left (fun expr i ->
         let loc = expr.pexp_loc in
@@ -456,7 +459,26 @@ let of_yaml_record_to_expr ~loc ~skip_unknown fields =
                fields)
             None]]
   in
-  let base_case = monad_binding record (List.mapi (fun i _ -> i) fields) in
+  let inline_fields =
+    List.filter_map
+      (fun f ->
+        Attribute.get Attrs.inline f |> function
+        | None -> None
+        | Some () -> (
+            Hashtbl.find_opt lookup f.pld_name.txt |> function
+            | Some v -> Some (f, v)
+            | None -> failwith "Didn't find label"))
+      fields
+  in
+  let new_fields =
+    List.concat_map
+      (fun f ->
+        match List.assoc_opt f inline_fields with
+        | Some ils -> ils
+        | None -> [ f ])
+      fields
+  in
+  let base_case = monad_binding record (List.mapi (fun i _ -> i) new_fields) in
   let kv_cases =
     List.mapi
       (fun i f ->
@@ -474,13 +496,18 @@ let of_yaml_record_to_expr ~loc ~skip_unknown fields =
                       (of_yaml_type_to_expr None f.pld_type)
                       [ evar ~loc "x" ]
               else evar ~loc (arg j))
-            fields
+            new_fields
         in
-        Exp.case
-          [%pat? ([%p pstring ~loc name], x) :: xs]
-          [%expr loop xs [%e Helpers.etuple ~loc funcs]])
-      fields
+        [
+          Exp.case
+            [%pat? ([%p pstring ~loc name], x) :: xs]
+            [%expr loop xs [%e Helpers.etuple ~loc funcs]];
+        ])
+      new_fields
   in
+  let kv_cases = List.concat kv_cases in
+  (* Add before the final case *)
+  Hashtbl.add lookup label fields;
   let kv_cases =
     kv_cases
     @ [

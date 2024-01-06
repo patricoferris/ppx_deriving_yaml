@@ -7,14 +7,15 @@ This ppx is based on [ppx_yojson](https://github.com/NathanReb/ppx_yojson) and [
   - [Key and Name](#key-and-name)
   - [Default Values](#default-values)
   - [Custom encoding and decoding](#custom-encoding-and-decoding)
+  - [Inlining records](#inlining-records)
 - [Partially Decoding](#partially-decoding)
 - [Implementation Details](#implementation-details)
 
 ## Basic Usage
 
-For converting OCaml values to yaml values `ppx_deriving_yaml` will do the conventional dropping of the type name if it is `t`. Otherwise the type name is the prefix to the `to_yaml` function. 
+For converting OCaml values to yaml values `ppx_deriving_yaml` will do the conventional dropping of the type name if it is `t`. Otherwise the type name is the prefix to the `to_yaml` function.
 
-`to_yaml` produces a [`Yaml.value`](https://github.com/avsm/ocaml-yaml/blob/master/lib/types.ml#L44) which is compatible with the [`Ezjsonm.value`](https://github.com/mirage/ezjsonm/blob/master/lib/ezjsonm.ml#L18) type. 
+`to_yaml` produces a [`Yaml.value`](https://github.com/avsm/ocaml-yaml/blob/master/lib/types.ml#L44) which is compatible with the [`Ezjsonm.value`](https://github.com/mirage/ezjsonm/blob/master/lib/ezjsonm.ml#L18) type.
 
 `of_yaml` produces OCaml types wrapped in a `result` -- this is how ocaml-yaml also handles errors i.e. not using exceptions. Based on your type this should let you move between yaml and OCaml values.
 
@@ -43,13 +44,13 @@ the users. For example:
 = <fun>
 ```
 
-If you make polymorphic types, then you will have to supply the function to convert the unknown to a yaml value. For example: 
+If you make polymorphic types, then you will have to supply the function to convert the unknown to a yaml value. For example:
 
 ```ocaml
 type 'a note = { txt : 'a } [@@deriving yaml]
 ```
 
-produces the following function. 
+produces the following function.
 
 ```ocaml
 # note_to_yaml;;
@@ -67,11 +68,11 @@ val x_to_yaml : x -> [> `O of (string * [> `Float of float ]) list ] = <fun>
 
 ## Attributes
 
-### Key and Name 
+### Key and Name
 
-Record field names cannot begin with a capital letter and variant constructors must start with one. This limits what the generated yaml can look like. To override the yaml names you can use the `[@key <string>]` and `[@name <string>]` attributes for records and variants respectively. 
+Record field names cannot begin with a capital letter and variant constructors must start with one. This limits what the generated yaml can look like. To override the yaml names you can use the `[@key <string>]` and `[@name <string>]` attributes for records and variants respectively.
 
-For example: 
+For example:
 
 ```ocaml
 type t = {
@@ -79,7 +80,7 @@ type t = {
 }[@@deriving to_yaml]
 ```
 
-Will produce Yaml of the form 
+Will produce Yaml of the form
 
 ```ocaml
 # Yaml.to_string (to_yaml { camel_name = "Alice" });;
@@ -120,6 +121,50 @@ The `to_yaml` function will use the custom encoder now instead.
 ```ocaml
 # Yaml.to_string (to_yaml { age = 41 });;
 - : string Yaml.res = Ok "age: 42\n"
+```
+
+### Inlining Records
+
+You may wish to split one yaml object into multiple types. The `[@inline]`
+attribute allows you to take another record and substitute it into a particular
+field. For example, consider the following yaml object.
+
+```yaml
+name: "Alice"
+age: 42
+sport: "Badminton"
+music: "Bright Eyes"
+```
+
+We might wish to split `name` and `age` into a person and collect `sport` and
+`music` under hobbies of the person.
+
+```ocaml
+type hobbies = {
+  sport : string;
+  music : string;
+}[@@deriving yaml]
+
+type t = {
+  name : string;
+  age : int;
+  hobbies : hobbies; [@inline]
+}[@@deriving yaml]
+```
+```mdx-error
+Lines 6-10, characters 3-21:
+Error: This expression has type 'a * 'b * 'c * 'd
+       but an expression was expected of type 'e * 'f * 'g
+```
+
+Now if we encode or decode the yaml, it will be treated as one single object
+ignoring the `hobbies` key entirely.
+
+```ocaml
+# Yaml.to_string (to_yaml { name = "Alice"; age = 42; hobbies = { sport = "Badminton"; music = "Bright Eyes" }});;
+Line 1, characters 27-31:
+Error: This record expression is expected to have type t
+       There is no field name within type t
 ```
 
 ## Partially Decoding
@@ -163,7 +208,7 @@ type t = {
 - : (t, [> `Msg of string ]) result = Ok {name = "Bob"; age = 42}
 ```
 
-## Implementation Details 
+## Implementation Details
 
 One important thing is that `'a option` values within records will return `None` if the Yaml you are trying to convert does not exist.
 

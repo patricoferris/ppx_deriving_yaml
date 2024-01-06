@@ -20,6 +20,8 @@ let check_rec_type rec_flag typ =
   in
   check#go
 
+let lookup = Hashtbl.create 128
+
 let generate_impl_of_yaml ~ctxt (rec_flag, type_decls) skip_unknown =
   let rec_flag = check_rec_type rec_flag type_decls () in
   let loc = Expansion_context.Deriver.derived_item_loc ctxt in
@@ -137,8 +139,8 @@ let generate_impl_of_yaml ~ctxt (rec_flag, type_decls) skip_unknown =
                    Vb.mk
                      (ppat_var ~loc { loc; txt = of_yaml })
                      (Helpers.poly_fun ~loc:ptype_loc typ_decl
-                        (Value.of_yaml_record_to_expr ~skip_unknown
-                           ~loc:ptype_loc fields));
+                        (Value.of_yaml_record_to_expr ~lookup ~skip_unknown
+                           ~label:ptype_name.txt ~loc:ptype_loc fields));
                  ];
              ]
          | _ ->
@@ -308,8 +310,7 @@ let generate_intf_of_yaml ~ctxt (_rec_flag, type_decls) :
               (Val.mk
                  { loc; txt = "error_encountered" }
                  (ptyp_extension ~loc
-                 @@ Location.error_extensionf ~loc
-                      "Cannot derived\n          anything"));
+                 @@ Location.error_extensionf ~loc "Cannot derive anything"));
           ])
     type_decls
   |> List.concat

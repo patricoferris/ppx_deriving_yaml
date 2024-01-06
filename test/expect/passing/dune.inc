@@ -1,3 +1,35 @@
+; -------- Test: `inline.ml` --------
+
+; The PPX-dependent executable under test
+(executable
+ (name inline)
+ (modules inline)
+ (preprocess (pps ppx_deriving_yaml))
+ (libraries yaml))
+
+; Run the PPX on the `.ml` file
+(rule
+ (targets inline.actual)
+ (deps
+  (:pp pp.exe)
+  (:input inline.ml))
+ (action
+  (run ./%{pp} -deriving-keep-w32 both --impl %{input} -o %{targets})))
+
+; Compare the post-processed output to the .expected file
+(rule
+ (alias runtest)
+ (package ppx_deriving_yaml)
+ (action
+  (diff inline.expected inline.actual)))
+
+; Ensure that the post-processed executable runs correctly
+(rule
+ (alias runtest)
+ (package ppx_deriving_yaml)
+ (action
+  (run ./inline.exe)))
+
 ; -------- Test: `recursive.ml` --------
 
 ; The PPX-dependent executable under test
