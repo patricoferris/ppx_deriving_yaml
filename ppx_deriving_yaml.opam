@@ -10,14 +10,12 @@ homepage: "https://github.com/patricoferris/ppx_deriving_yaml"
 bug-reports: "https://github.com/patricoferris/ppx_deriving_yaml/issues"
 depends: [
   "dune" {>= "2.7"}
-  "alcotest" {with-test}
-  "bos" {with-test}
-  "mdx" {with-test}
-  "ezjsonm" {with-test}
-  "ocaml" {>= "4.08.1"}
-  "ppxlib" {>= "0.14.0"}
-  "ppx_deriving"
   "yaml"
+  "ppx_deriving"
+  "alcotest" {with-test}
+  "mdx" {with-test}
+  "ocaml" {>= "4.08.1"}
+  "ppxlib" {>= "0.25.0"}
   "odoc" {with-doc}
 ]
 build: [
