@@ -1,4 +1,4 @@
-let yaml = Alcotest.testable Yaml.pp Yaml.equal
+let yaml = Alcotest.testable Yaml.pp Stdlib.( = )
 
 type error = [ `Msg of string ]
 
