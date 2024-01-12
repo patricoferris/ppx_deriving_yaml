@@ -9,7 +9,7 @@ license: "ISC"
 homepage: "https://github.com/patricoferris/ppx_deriving_yaml"
 bug-reports: "https://github.com/patricoferris/ppx_deriving_yaml/issues"
 depends: [
-  "dune" {>= "2.7"}
+  "dune" {>= "3.0"}
   "yaml"
   "ppx_deriving"
   "alcotest" {with-test}

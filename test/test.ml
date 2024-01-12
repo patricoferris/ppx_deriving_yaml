@@ -1,7 +1,4 @@
 let yaml = Alcotest.testable Yaml.pp Stdlib.( = )
-
-type error = [ `Msg of string ]
-
 let pp_error ppf (`Msg x) = Fmt.string ppf x
 let error = Alcotest.testable pp_error ( = )
 
@@ -49,8 +46,6 @@ type person = { name : string; [@default "Alice"] age : int } [@@deriving yaml]
 let pp_person ppf x =
   Format.pp_print_string ppf x.name;
   Format.pp_print_int ppf x.age
-
-let person = Alcotest.testable pp_person Stdlib.( = )
 
 type users = { db : person list } [@@deriving yaml]
 
@@ -130,32 +125,6 @@ let test_simple_poly () =
   Alcotest.check yaml "(to_yaml) same polymorhpic record" correct_str test_str;
   Alcotest.(check (result str_pol error))
     "(of_yaml) same polymorhpic record" (Ok correct_str_of) test_str_of
-
-type str_opt = { name : string option } [@@deriving yaml]
-
-let str_opt =
-  Alcotest.testable
-    (fun ppf x ->
-      match x.name with
-      | Some t -> Format.pp_print_string ppf t
-      | None -> Format.pp_print_string ppf "none")
-    Stdlib.( = )
-
-let test_option () =
-  let correct_opt_some = `O [ ("name", `String "Alice") ] in
-  let test_opt_some = str_opt_to_yaml { name = Some "Alice" } in
-  let correct_opt_none = `O [ ("name", `Null) ] in
-  let test_opt_none = str_opt_to_yaml { name = None } in
-  let correct_opt_some_of = Ok { name = Some "Alice" } in
-  let test_opt_some_of = str_of_yaml correct_opt_some in
-  let correct_opt_none_of = Ok { name = None } in
-  let test_opt_none_of = str_of_yaml correct_opt_none in
-  Alcotest.check yaml "same string option (some)" correct_opt_some test_opt_some;
-  Alcotest.check yaml "same string option (none)" correct_opt_none test_opt_none;
-  Alcotest.(check (result str_opt error))
-    "(of_yaml) same string option (some)" correct_opt_some_of test_opt_some_of;
-  Alcotest.(check (result str_opt error))
-    "(of_yaml) same string option (none)" correct_opt_none_of test_opt_none_of
 
 type var = Alpha | Beta of int | Gamma of string * int [@@deriving yaml]
 
