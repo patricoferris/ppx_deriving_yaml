@@ -1,6 +1,6 @@
 ## v0.2.3 (27/04/2024) Marrakesh
 
-- Prefix `Stdlib.` to standard library modules so other stdlibs work (#53, @andrepopp)
+- Prefix `Stdlib.` to standard library modules so other stdlibs work (#53, @andreypopp)
 
 ## v0.2.2 (05/01/2024) Cambridge
 
