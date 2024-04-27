@@ -61,7 +61,7 @@ include
       `O
         (Stdlib.List.filter_map (fun x -> x)
            [((fun x ->
-                if x = "Una"
+                if Stdlib.(=) x "Una"
                 then None
                 else Some ("name", (((fun (x : string) -> `String x)) x))))
               x.name])

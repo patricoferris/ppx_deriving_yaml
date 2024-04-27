@@ -167,7 +167,7 @@ let record_to_expr ~typ ~loc fields =
             | Some d ->
                 [%expr
                   (fun x ->
-                    if x = [%e d] then None
+                    if Stdlib.(=) x [%e d] then None
                     else
                       Some
                         ( [%e Ast_builder.Default.estring ~loc:pld_loc name],
