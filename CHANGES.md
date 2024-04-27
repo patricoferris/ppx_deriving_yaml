@@ -1,3 +1,7 @@
+## v0.2.3 (27/04/2024) Marrakesh
+
+- Prefix `Stdlib.` to standard library modules so other stdlibs work (#53, @andrepopp)
+
 ## v0.2.2 (05/01/2024) Cambridge
 
  - Embed errors in the AST (#51, @patricoferris and special thanks to @panglesd
