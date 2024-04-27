@@ -54,10 +54,10 @@ let mangle_suf ?fixpoint suf lid =
 let map_bind ~loc =
   [%expr
     fun f lst ->
-      List.fold_left
+      Stdlib.List.fold_left
         (fun acc x ->
           match acc with
-          | Ok acc -> f x >>= fun x -> Ok (x :: acc)
-          | Error e -> Error e)
-        (Ok []) lst
-      >>= fun lst -> Ok (List.rev lst)]
+          | Stdlib.Ok acc -> f x >>= fun x -> Stdlib.Ok (x :: acc)
+          | Stdlib.Error e -> Stdlib.Error e)
+        (Stdlib.Ok []) lst
+      >>= fun lst -> Stdlib.Ok (Stdlib.List.rev lst)]

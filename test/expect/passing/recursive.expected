@@ -5,7 +5,7 @@ include
   struct
     let rec to_yaml (x : t) =
       `O
-        (List.filter_map (fun x -> x)
+        (Stdlib.List.filter_map (fun x -> x)
            [Some ("name", (((fun (x : string) -> `String x)) x.name));
            Some
              ("children",
@@ -34,15 +34,17 @@ include
                             match v with | Ok v -> f v | Error _ as e -> e in
                           ((fun f ->
                               fun lst ->
-                                (List.fold_left
+                                (Stdlib.List.fold_left
                                    (fun acc ->
                                       fun x ->
                                         match acc with
-                                        | Ok acc ->
+                                        | Stdlib.Ok acc ->
                                             (f x) >>=
-                                              ((fun x -> Ok (x :: acc)))
-                                        | Error e -> Error e) (Ok []) lst)
-                                  >>= (fun lst -> Ok (List.rev lst))))
+                                              ((fun x -> Stdlib.Ok (x :: acc)))
+                                        | Stdlib.Error e -> Stdlib.Error e)
+                                   (Stdlib.Ok []) lst)
+                                  >>=
+                                  (fun lst -> Stdlib.Ok (Stdlib.List.rev lst))))
                             (fun x -> of_yaml x) lst
                       | _ ->
                           Error

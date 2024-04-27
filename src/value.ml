@@ -178,7 +178,7 @@ let record_to_expr ~typ ~loc fields =
   let fs = fields_to_expr fields in
   [%expr
     fun (x : [%t typ]) ->
-      `O (List.filter_map (fun x -> x) [%e Ast_builder.Default.elist ~loc fs])]
+      `O (Stdlib.List.filter_map (fun x -> x) [%e Ast_builder.Default.elist ~loc fs])]
 
 let type_decl_to_type type_decl =
   let loc = type_decl.ptype_loc in
@@ -333,7 +333,7 @@ let rec of_yaml_type_to_expr name typ =
               [%e t] [%e evar ~loc (arg i)] >>= fun [%p pvar ~loc (arg i)] ->
               [%e acc]])
           [%expr
-            Result.Ok
+            Stdlib.Result.Ok
               [%e
                 Helpers.etuple ~loc
                   (List.mapi (fun i _ -> evar ~loc (arg i)) typs)]]
@@ -348,13 +348,13 @@ let rec of_yaml_type_to_expr name typ =
             | Rtag (name, true, []) ->
                 Exp.case
                   [%pat? `O [ ([%p pstring ~loc name.txt], `A []) ]]
-                  [%expr Result.Ok [%e Exp.variant name.txt None]]
+                  [%expr Stdlib.Result.Ok [%e Exp.variant name.txt None]]
             | Rtag (name, false, [ { ptyp_desc = Ptyp_tuple typs; _ } ]) ->
                 let e =
                   monad_fold
                     (of_yaml_type_to_expr None)
                     [%expr
-                      Result.Ok
+                      Stdlib.Result.Ok
                         [%e
                           Exp.variant name.txt
                             (Some
@@ -381,7 +381,7 @@ let rec of_yaml_type_to_expr name typ =
                   [%pat? `O [ ([%p pstring ~loc name.txt], `A [ x ]) ]]
                   [%expr
                     [%e of_yaml_type_to_expr None t] x >>= fun x ->
-                    Result.Ok [%e Exp.variant name.txt (Some (evar ~loc "x"))]]
+                    Stdlib.Result.Ok [%e Exp.variant name.txt (Some (evar ~loc "x"))]]
             | _ -> Exp.case [%pat? _] [%expr Error (`Msg "Not implemented")])
           row_fields
       in
