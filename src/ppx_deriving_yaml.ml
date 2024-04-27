@@ -89,7 +89,7 @@ let generate_impl_of_yaml ~ctxt (rec_flag, type_decls) skip_unknown =
                              monad_fold
                                (of_yaml_type_to_expr None)
                                [%expr
-                                 Result.Ok
+                                 Stdlib.Result.Ok
                                    [%e
                                      Exp.construct
                                        {
@@ -113,7 +113,7 @@ let generate_impl_of_yaml ~ctxt (rec_flag, type_decls) skip_unknown =
                          Exp.case
                            [%pat? _]
                            [%expr
-                             Error (`Msg "no match for this variant expression")];
+                             Stdlib.Error (`Msg "no match for this variant expression")];
                        ])
              in
              let of_yaml_expr =
@@ -175,7 +175,7 @@ let generate_impl_to_yaml ~ctxt (rec_flag, type_decls) =
              | Some t ->
                  let yamliser =
                    Helpers.poly_fun ~loc:typ_decl.ptype_loc typ_decl
-                     [%expr [%e Value.type_to_expr t]]
+                     (Value.type_to_expr t)
                  in
                  let to_yaml = mangle_name_label suf_to ptype_name.txt in
                  [

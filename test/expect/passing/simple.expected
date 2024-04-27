@@ -5,7 +5,7 @@ include
   struct
     let to_yaml (x : t) =
       `O
-        (List.filter_map (fun x -> x)
+        (Stdlib.List.filter_map (fun x -> x)
            [Some ("name", (((fun (x : string) -> `String x)) x.name));
            Some
              ("age",
@@ -59,7 +59,7 @@ include
   struct
     let u_to_yaml (x : u) =
       `O
-        (List.filter_map (fun x -> x)
+        (Stdlib.List.filter_map (fun x -> x)
            [((fun x ->
                 if x = "Una"
                 then None
@@ -98,7 +98,7 @@ include
   struct
     let w_to_yaml (x : w) =
       `O
-        (List.filter_map (fun x -> x)
+        (Stdlib.List.filter_map (fun x -> x)
            [Some ("age", (((fun i -> `Float (float_of_int (i - 10)))) x.age))])
     let w_of_yaml =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
@@ -132,7 +132,7 @@ include
   struct
     let x_to_yaml (x : x) =
       `O
-        (List.filter_map (fun x -> x)
+        (Stdlib.List.filter_map (fun x -> x)
            [Some
               ("age", (((fun (x : int) -> `Float (float_of_int x))) x.age))])
     let x_of_yaml =
