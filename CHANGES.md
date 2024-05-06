@@ -1,3 +1,8 @@
+## v0.3.0 (06/05/2024) Cambridge
+
+- Fix bug with unused infix operators (#56, @patricoferris)
+- Stdlib.( = ) is also used now so other stdlibs work (#55, @andreypopp)
+
 ## v0.2.3 (27/04/2024) Marrakesh
 
 - Prefix `Stdlib.` to standard library modules so other stdlibs work (#53, @andreypopp)
