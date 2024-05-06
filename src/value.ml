@@ -167,7 +167,7 @@ let record_to_expr ~typ ~loc fields =
             | Some d ->
                 [%expr
                   (fun x ->
-                    if Stdlib.(=) x [%e d] then None
+                    if Stdlib.( = ) x [%e d] then None
                     else
                       Some
                         ( [%e Ast_builder.Default.estring ~loc:pld_loc name],
@@ -178,7 +178,10 @@ let record_to_expr ~typ ~loc fields =
   let fs = fields_to_expr fields in
   [%expr
     fun (x : [%t typ]) ->
-      `O (Stdlib.List.filter_map (fun x -> x) [%e Ast_builder.Default.elist ~loc fs])]
+      `O
+        (Stdlib.List.filter_map
+           (fun x -> x)
+           [%e Ast_builder.Default.elist ~loc fs])]
 
 let type_decl_to_type type_decl =
   let loc = type_decl.ptype_loc in
@@ -210,7 +213,9 @@ let type_decl_of_type type_decl =
 
 let wrap_open_rresult ~loc expr =
   [%expr
-    let ( >>= ) v f = match v with Ok v -> f v | Error _ as e -> e in
+    let[@warning "-26"] ( >>= ) v f =
+      match v with Ok v -> f v | Error _ as e -> e
+    in
     [%e expr]]
 
 let mk_pat_match ~loc cases typ =
@@ -381,7 +386,8 @@ let rec of_yaml_type_to_expr name typ =
                   [%pat? `O [ ([%p pstring ~loc name.txt], `A [ x ]) ]]
                   [%expr
                     [%e of_yaml_type_to_expr None t] x >>= fun x ->
-                    Stdlib.Result.Ok [%e Exp.variant name.txt (Some (evar ~loc "x"))]]
+                    Stdlib.Result.Ok
+                      [%e Exp.variant name.txt (Some (evar ~loc "x"))]]
             | _ -> Exp.case [%pat? _] [%expr Error (`Msg "Not implemented")])
           row_fields
       in

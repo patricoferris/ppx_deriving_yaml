@@ -4,7 +4,8 @@ type t = {
 include
   struct
     let of_yaml =
-      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
       function
       | `O xs ->
           let rec loop xs ((arg0, arg1) as _state) =
