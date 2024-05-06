@@ -113,7 +113,8 @@ let generate_impl_of_yaml ~ctxt (rec_flag, type_decls) skip_unknown =
                          Exp.case
                            [%pat? _]
                            [%expr
-                             Stdlib.Error (`Msg "no match for this variant expression")];
+                             Stdlib.Error
+                               (`Msg "no match for this variant expression")];
                        ])
              in
              let of_yaml_expr =

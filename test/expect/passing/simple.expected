@@ -1,3 +1,86 @@
+type var =
+  | Hello 
+  | World of string [@@deriving yaml]
+include
+  struct
+    let var_to_yaml =
+      function
+      | Hello -> `O [("Hello", (`A []))]
+      | World arg0 ->
+          `O [("World", (`A [((fun (x : string) -> `String x)) arg0]))]
+    let var_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | `O (("Hello", `A [])::[]) -> Stdlib.Result.Ok Hello
+      | `O (("World", `A (arg0::[]))::[]) ->
+          ((function
+            | `String x -> Ok x
+            | _ ->
+                Error
+                  (`Msg "Was expecting 'string' but got a different type"))
+             arg0)
+            >>= ((fun arg0 -> Stdlib.Result.Ok (World arg0)))
+      | _ -> Stdlib.Error (`Msg "no match for this variant expression")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type poly_var = [ `Hello  | `World of string ][@@deriving yaml]
+include
+  struct
+    let poly_var_to_yaml =
+      function
+      | `Hello -> `O [("Hello", (`A []))]
+      | `World x ->
+          ((fun (x : string) -> `String x) x) |>
+            ((fun x -> `O [("World", (`A [x]))]))
+    let poly_var_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | `O (("Hello", `A [])::[]) -> Stdlib.Result.Ok `Hello
+      | `O (("World", `A (x::[]))::[]) ->
+          ((function
+            | `String x -> Ok x
+            | _ ->
+                Error
+                  (`Msg "Was expecting 'string' but got a different type")) x)
+            >>= ((fun x -> Stdlib.Result.Ok (`World x)))
+      | _ -> Error (`Msg "failed converting variant")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type a = {
+  x: [ `Simple  | `Example ] }[@@deriving yaml]
+include
+  struct
+    let a_to_yaml (x : a) =
+      `O
+        (Stdlib.List.filter_map (fun x -> x)
+           [Some
+              ("x",
+                (((function
+                   | `Simple -> `O [("Simple", (`A []))]
+                   | `Example -> `O [("Example", (`A []))])) x.x))])
+    let a_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | `O xs ->
+          let rec loop xs (arg0 as _state) =
+            match xs with
+            | ("x", x)::xs ->
+                loop xs
+                  ((let (>>=) v f =
+                      match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+                    function
+                    | `O (("Simple", `A [])::[]) -> Stdlib.Result.Ok `Simple
+                    | `O (("Example", `A [])::[]) ->
+                        Stdlib.Result.Ok `Example
+                    | _ -> Error (`Msg "failed converting variant")) x)
+            | [] -> arg0 >>= ((fun arg0 -> Ok { x = arg0 }))
+            | (x, y)::_ -> Error (`Msg (x ^ (Yaml.to_string_exn y))) in
+          loop xs (Error (`Msg "Didn't find the function for key: x"))
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type t = {
   name: string ;
   age: int option }[@@deriving yaml]
@@ -14,7 +97,8 @@ include
                   | Some t -> ((fun (x : int) -> `Float (float_of_int x))) t))
                   x.age))])
     let of_yaml =
-      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
       function
       | `O xs ->
           let rec loop xs ((arg0, arg1) as _state) =
@@ -71,7 +155,8 @@ type v = {
 include
   struct
     let v_of_yaml =
-      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
       function
       | `O xs ->
           let rec loop xs (arg0 as _state) =
@@ -101,7 +186,8 @@ include
         (Stdlib.List.filter_map (fun x -> x)
            [Some ("age", (((fun i -> `Float (float_of_int (i - 10)))) x.age))])
     let w_of_yaml =
-      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
       function
       | `O xs ->
           let rec loop xs (arg0 as _state) =
@@ -136,7 +222,8 @@ include
            [Some
               ("age", (((fun (x : int) -> `Float (float_of_int x))) x.age))])
     let x_of_yaml =
-      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
       function
       | `O xs ->
           let rec loop xs (arg0 as _state) =
