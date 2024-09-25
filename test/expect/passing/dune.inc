@@ -1,3 +1,35 @@
+; -------- Test: `locally_open_module.ml` --------
+
+; The PPX-dependent executable under test
+(executable
+ (name locally_open_module)
+ (modules locally_open_module)
+ (preprocess (pps ppx_deriving_yaml))
+ (libraries yaml) (enabled_if (>= %{ocaml_version} "5.2.0")))
+
+; Run the PPX on the `.ml` file
+(rule
+ (targets locally_open_module.actual)
+ (deps
+  (:pp pp.exe)
+  (:input locally_open_module.ml))
+ (action
+  (run ./%{pp} -deriving-keep-w32 both --impl %{input} -o %{targets})))
+
+; Compare the post-processed output to the .expected file
+(rule
+ (alias runtest)
+ (package ppx_deriving_yaml)
+ (action
+  (diff locally_open_module.expected locally_open_module.actual)))
+
+; Ensure that the post-processed executable runs correctly
+(rule
+ (alias runtest)
+ (package ppx_deriving_yaml)
+ (action
+  (run ./locally_open_module.exe)))
+
 ; -------- Test: `recursive.ml` --------
 
 ; The PPX-dependent executable under test
@@ -5,7 +37,7 @@
  (name recursive)
  (modules recursive)
  (preprocess (pps ppx_deriving_yaml))
- (libraries yaml))
+ (libraries yaml) )
 
 ; Run the PPX on the `.ml` file
 (rule
@@ -37,7 +69,7 @@
  (name simple)
  (modules simple)
  (preprocess (pps ppx_deriving_yaml))
- (libraries yaml))
+ (libraries yaml) )
 
 ; Run the PPX on the `.ml` file
 (rule
@@ -69,7 +101,7 @@
  (name skip_unknown)
  (modules skip_unknown)
  (preprocess (pps ppx_deriving_yaml))
- (libraries yaml))
+ (libraries yaml) )
 
 ; Run the PPX on the `.ml` file
 (rule

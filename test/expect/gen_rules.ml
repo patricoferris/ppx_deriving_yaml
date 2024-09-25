@@ -18,8 +18,11 @@ let output_stanzas ~expect_failure filename =
       Format.fprintf ppf
         "; The PPX-dependent executable under test@,\
          @[<v 1>(executable@ (name %s)@ (modules %s)@ (preprocess (pps \
-         ppx_deriving_yaml))@ (libraries yaml))@]"
+         ppx_deriving_yaml))@ (libraries yaml) %s)@]"
         base base
+        (if base = "locally_open_module" then
+           "(enabled_if (>= %{ocaml_version} \"5.2.0\"))"
+         else "")
     else ()
   in
   let pp_rule ppf base =
