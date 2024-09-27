@@ -1,0 +1,43 @@
+module M =
+  struct
+    type t =
+      | A 
+      | B 
+      | C [@@deriving yaml]
+    include
+      struct
+        let to_yaml =
+          function
+          | A -> `O [("A", (`A []))]
+          | B -> `O [("B", (`A []))]
+          | C -> `O [("C", (`A []))]
+        let of_yaml =
+          let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e
+            [@@warning "-26"] in
+          function
+          | `O (("A", `A [])::[]) -> Stdlib.Result.Ok A
+          | `O (("B", `A [])::[]) -> Stdlib.Result.Ok B
+          | `O (("C", `A [])::[]) -> Stdlib.Result.Ok C
+          | _ -> Stdlib.Error (`Msg "no match for this variant expression")
+      end[@@ocaml.doc "@inline"][@@merlin.hide ]
+  end
+type locally_open_m =
+  | Lom of M.(t) [@@deriving yaml]
+include
+  struct
+    let locally_open_m_to_yaml =
+      function
+      | Lom arg0 ->
+          `O [("Lom", (`A [((let open M in fun x -> to_yaml x)) arg0]))]
+    let locally_open_m_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | `O (("Lom", `A (arg0::[]))::[]) ->
+          ((let open M in fun x -> of_yaml x) arg0) >>=
+            ((fun arg0 -> Stdlib.Result.Ok (Lom arg0)))
+      | _ -> Stdlib.Error (`Msg "no match for this variant expression")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+let () =
+  let v = Lom A in
+  ((locally_open_m_to_yaml v) |> Yaml.to_string_exn) |> print_endline

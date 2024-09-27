@@ -104,6 +104,10 @@ let rec type_to_expr typ =
       | Error (`Msg (loc, m)) ->
           pexp_extension ~loc @@ Location.error_extensionf ~loc "%s" m
       | Ok cases -> Exp.function_ ~loc cases)
+  | { ptyp_desc = Ptyp_open (module_e, typ); _ } ->
+      let module_ident = Opn.mk (Mod.mk (Pmod_ident module_e)) in
+      let v = type_to_expr typ in
+      pexp_open ~loc module_ident v
   | { ptyp_desc = Ptyp_arrow _; _ } ->
       pexp_extension ~loc
       @@ Location.error_extensionf ~loc "Functions cannot be converted yaml"
@@ -399,6 +403,10 @@ let rec of_yaml_type_to_expr name typ =
                  [%pat? _]
                  [%expr Error (`Msg "failed converting variant")];
              ]))
+  | { ptyp_desc = Ptyp_open (module_e, typ); _ } ->
+      let module_ident = Opn.mk (Mod.mk (Pmod_ident module_e)) in
+      let v = of_yaml_type_to_expr name typ in
+      pexp_open ~loc module_ident v
   | { ptyp_desc = Ptyp_arrow _; _ } ->
       pexp_extension ~loc
       @@ Location.error_extensionf ~loc "Functions cannot be converted yaml"
