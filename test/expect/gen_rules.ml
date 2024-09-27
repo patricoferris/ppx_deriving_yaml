@@ -10,6 +10,12 @@ let ppx_fail_global_stanzas () =
 
   |}
 
+let enabled_versions =
+  [ ("locally_open_module", "(enabled_if (>= %{ocaml_version} \"5.2.0\"))") ]
+
+let lookup_enabled base =
+  try List.assoc base enabled_versions with Not_found -> ""
+
 let output_stanzas ~expect_failure filename =
   let base = Filename.remove_extension filename in
   let pp_library ppf base =
@@ -19,10 +25,7 @@ let output_stanzas ~expect_failure filename =
         "; The PPX-dependent executable under test@,\
          @[<v 1>(executable@ (name %s)@ (modules %s)@ (preprocess (pps \
          ppx_deriving_yaml))@ (libraries yaml) %s)@]"
-        base base
-        (if base = "locally_open_module" then
-           "(enabled_if (>= %{ocaml_version} \"5.2.0\"))"
-         else "")
+        base base (lookup_enabled base)
     else ()
   in
   let pp_rule ppf base =
@@ -43,18 +46,21 @@ let output_stanzas ~expect_failure filename =
        @[<v 1>(deps@,\
        (:pp pp.exe)@,\
        (:input %s.ml))@]@,\
-       @[<v 1>(action@,\
+       %s\n\
+      \       @[<v 1>(action@,\
        %a))@]@]"
-      base base pp_action expect_failure
+      base base (lookup_enabled base) pp_action expect_failure
   in
   let pp_diff_alias ppf base =
     Format.fprintf ppf
       "; Compare the post-processed output to the .expected file@,\
        @[<v 1>(rule@,\
        (alias runtest)@,\
-       (package ppx_deriving_yaml)@,\
+       %s\n\
+      \       (package ppx_deriving_yaml)@,\
        @[<v 1>(action@,\
-       @[<hov 2>(diff@ %s.expected@ %s.actual)@])@])@]" base base
+       @[<hov 2>(diff@ %s.expected@ %s.actual)@])@])@]" (lookup_enabled base)
+      base base
   in
   let pp_run_alias ppf base =
     (* If we expect the derivation to succeed, then we should be able to compile
@@ -66,9 +72,10 @@ let output_stanzas ~expect_failure filename =
          ; Ensure that the post-processed executable runs correctly@,\
          @[<v 1>(rule@,\
          (alias runtest)@,\
-         (package ppx_deriving_yaml)@,\
+         %s\n\
+        \         (package ppx_deriving_yaml)@,\
          @[<v 1>(action@,\
-         @[<hov 2>(run@ ./%s.exe)@])@])@]" base
+         @[<hov 2>(run@ ./%s.exe)@])@])@]" (lookup_enabled base) base
     else ()
   in
   Format.set_margin 80;
