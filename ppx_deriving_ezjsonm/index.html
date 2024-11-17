@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>index (ppx_deriving_ezjsonm.index)</title><meta charset="utf-8"/><link rel="stylesheet" href="../odoc.support/odoc.css"/><meta name="generator" content="odoc 2.4.3"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><script src="../odoc.support/highlight.pack.js"></script><script>hljs.initHighlightingOnLoad();</script></head><body class="odoc"><nav class="odoc-nav"><a href="../index.html">Up</a> – ppx_deriving_ezjsonm</nav><header class="odoc-preamble"><h2 id="deriving-json"><a href="#deriving-json" class="anchor"></a>Deriving JSON</h2><p>This deriver generates code targetted at the <code>Ezjsonm</code> library. This shares a core type with the Yaml library meaning the deriver works in exactly the same way as <code>ppx_deriving_yaml</code>.</p><p>The derivers favour usefulness over efficiency.</p></header><nav class="odoc-toc"><ul><li><a href="#a-simple-example">A Simple Example</a></li><li><a href="#attributes">Attributes</a></li></ul></nav><div class="odoc-content"><h3 id="a-simple-example"><a href="#a-simple-example" class="anchor"></a>A Simple Example</h3><p>To use the library, add a preprocessing stanza to your dune library.</p><pre class="language-ocaml"><code>(preprocess
+  (pps
+   ppx_deriving_ezjsonm))</code></pre><p>So the documentation can include checked code examples, we first must require the deriver.</p><pre class="language-ocaml"><code># #require &quot;ppx_deriving_ezjsonm&quot;;;</code></pre><p>From there, you can annotate your type declarations with <code>[@@deriving ezjsonm]</code>. By default this will generate two functions, <code>of_yaml</code> and <code>to_yaml</code>. If the type is not called <code>t</code>, the type's name will be prepended to these functions separated by a single hyphen.</p><pre class="language-ocaml"><code># module Person : sig
+    type t [@@deriving ezjsonm]
+  val set_name : t -&gt; string -&gt; t
+  end = struct 
+    type t = {
+      name : string;
+      age : int;
+    }[@@deriving ezjsonm]
+    let set_name t name = { t with name }
+  end;;
+module Person :
+  sig
+    type t
+    val to_ezjsonm : t -&gt; Ezjsonm.value
+    val of_ezjsonm : Ezjsonm.value -&gt; (t, [&gt; `Msg of string ]) result
+    val set_name : t -&gt; string -&gt; t
+  end</code></pre><p>You can then use these functions in conjunction with the <code>Ezjsonm</code> libary to read, manipulate and write JSON values. For example, this little JSON value:</p><pre class="language-ocaml"><code># let raw_json = &quot;{\&quot;name\&quot;: \&quot;Alice\&quot;, \&quot;age\&quot;: 42 }&quot;
+val raw_json : string = &quot;{\&quot;name\&quot;: \&quot;Alice\&quot;, \&quot;age\&quot;: 42 }&quot;
+# let p = Ezjsonm.value_from_string raw_json 
+  |&gt; Person.of_ezjsonm
+  |&gt; Result.get_ok;;
+val p : Person.t = &lt;abstr&gt;</code></pre><p>Then we change the name of the person and convert back to JSON.</p><pre class="language-ocaml"><code># Person.set_name p &quot;Bob&quot; |&gt; Person.to_ezjsonm |&gt; Ezjsonm.value_to_string;;
+- : string = &quot;{\&quot;name\&quot;:\&quot;Bob\&quot;,\&quot;age\&quot;:42}&quot;</code></pre><h3 id="attributes"><a href="#attributes" class="anchor"></a>Attributes</h3><p>For more information about the possible attributes, please see the <a href="https://ocaml.org/p/ppx_deriving_yaml">documentation for <code>ppx_deriving_yaml</code></a>.</p></div></body></html>

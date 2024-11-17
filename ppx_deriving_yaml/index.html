@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>index (ppx_deriving_yaml.index)</title><meta charset="utf-8"/><link rel="stylesheet" href="../odoc.support/odoc.css"/><meta name="generator" content="odoc 2.4.3"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><script src="../odoc.support/highlight.pack.js"></script><script>hljs.initHighlightingOnLoad();</script></head><body class="odoc"><nav class="odoc-nav"><a href="../index.html">Up</a> – ppx_deriving_yaml</nav><header class="odoc-preamble"><h1 id="deriving-yaml"><a href="#deriving-yaml" class="anchor"></a>Deriving Yaml</h1><p>This ppx is based on <a href="https://github.com/NathanReb/ppx_yojson">ppx_yojson</a> and <a href="https://github.com/ocaml-ppx/ppx_deriving_yojson">ppx_deriving_yojson</a> because of the many similarities between JSON and yaml.</p><p>So similar that OCaml's <code>Yaml</code> library shares a common type with the <a href="https://github.com/p/ezjsonm">Ezjsonm</a> library. See <a href="https://github.com/p/ppx_deriving_ezjsonm"><code>ppx_deriving_ezjsonm</code></a> for more details.</p></header><nav class="odoc-toc"><ul><li><a href="#basic-usage">Basic Usage</a></li><li><a href="#attributes">Attributes</a><ul><li><a href="#key-and-name">Key and Name</a></li><li><a href="#default-values">Default Values</a></li><li><a href="#custom-encoding-and-decoding">Custom encoding and decoding</a></li></ul></li><li><a href="#partially-decoding">Partially Decoding</a></li><li><a href="#implementation-details">Implementation Details</a></li></ul></nav><div class="odoc-content"><h2 id="basic-usage"><a href="#basic-usage" class="anchor"></a>Basic Usage</h2><p>For converting OCaml values to Yaml values <code>ppx_deriving_yaml</code> will do the conventional dropping of the type name if it is <code>t</code>. Otherwise the type name is the prefix to the <code>to_yaml</code> function.</p><p><code>to_yaml</code> produces a <code>Yaml.value</code>.</p><p><code>of_yaml</code> produces OCaml types wrapped in a <code>Stdlib.result</code>.</p><pre class="language-ocaml"><code># #require &quot;ppx_deriving_yaml&quot;;;</code></pre><p>Here is a small example.</p><pre class="language-ocaml"><code>type person = { name : string; age : int } [@@deriving yaml]
+type users = person list [@@deriving yaml]</code></pre><p>This will produce four functions, a <code>_to_yaml</code> and <code>_of_yaml</code> for both a person and the users. For example:</p><pre class="language-ocaml"><code># person_to_yaml;;
+- : person -&gt;
+    [&gt; `O of (string * [&gt; `Float of float | `String of string ]) list ]
+= &lt;fun&gt;
+# users_of_yaml;;
+- : [&gt; `A of
+         [&gt; `O of (string * [&gt; `Float of float | `String of string ]) list ]
+         list ] -&gt;
+    (person list, [&gt; `Msg of string ]) result
+= &lt;fun&gt;</code></pre><p>If your type constructors have arguments, then the functions will be higher-order and you will need to supply a function to convert values for each constructor argument. For example:</p><pre class="language-ocaml"><code>type 'a note = { txt : 'a } [@@deriving yaml]</code></pre><p>produces the following function.</p><pre class="language-ocaml"><code># note_to_yaml;;
+- : ('a -&gt; Yaml.value) -&gt; 'a note -&gt; [&gt; `O of (string * Yaml.value) list ] =
+&lt;fun&gt;</code></pre><p>Finally, if you only need the encoder (<code>to_yaml</code>) or the decoder (<code>of_yaml</code>) then there are single versions of the deriver for those.</p><pre class="language-ocaml"><code># type x = { age : int }[@@deriving to_yaml];;
+type x = { age : int; }
+val x_to_yaml : x -&gt; [&gt; `O of (string * [&gt; `Float of float ]) list ] = &lt;fun&gt;</code></pre><h2 id="attributes"><a href="#attributes" class="anchor"></a>Attributes</h2><h3 id="key-and-name"><a href="#key-and-name" class="anchor"></a>Key and Name</h3><p>Record field names cannot begin with a capital letter and variant constructors must start with one. This limits what the generated Yaml can look like. To override the Yaml names you can use the <code>[@key &lt;string&gt;]</code> and <code>[@name
+&lt;string&gt;]</code> attributes for records and variants respectively.</p><pre class="language-ocaml"><code># type t = {
+    camel_name : string [@key &quot;camel-name&quot;]
+  }[@@deriving to_yaml];;
+type t = { camel_name : string; }
+val to_yaml : t -&gt; [&gt; `O of (string * [&gt; `String of string ]) list ] = &lt;fun&gt;
+
+# Yaml.to_string_exn (to_yaml { camel_name = &quot;Alice&quot; });;
+- : string = &quot;camel-name: Alice\n&quot;</code></pre><h3 id="default-values"><a href="#default-values" class="anchor"></a>Default Values</h3><p>You can also specify default values for fields.</p><pre class="language-ocaml"><code>type t = {
+  name : string;
+  age : int [@default 42]
+}[@@deriving yaml]</code></pre><p>These will be used in the absence of any fields when decoding Yaml values into OCaml ones.</p><pre class="language-ocaml"><code># Yaml.of_string_exn &quot;name: Alice&quot; |&gt; of_yaml;;
+- : (t, [&gt; `Msg of string ]) result = Ok {name = &quot;Alice&quot;; age = 42}</code></pre><h3 id="custom-encoding-and-decoding"><a href="#custom-encoding-and-decoding" class="anchor"></a>Custom encoding and decoding</h3><p>Sometimes you might want to specify your own encoding and decoding logic on field by field basis. To do so, you can use the <code>of_yaml</code> and <code>to_yaml</code> attributes.</p><pre class="language-ocaml"><code>type t = {
+  name : string [@to_yaml fun i -&gt; `String (&quot;custom-&quot; ^ i)]
+}[@@deriving yaml]</code></pre><p>The <code>to_yaml</code> function will use the custom encoder now instead.</p><pre class="language-ocaml"><code># Yaml.to_string_exn (to_yaml { name = &quot;alice&quot; });;
+- : string = &quot;name: custom-alice\n&quot;</code></pre><h2 id="partially-decoding"><a href="#partially-decoding" class="anchor"></a>Partially Decoding</h2><p>There is a <code>~skip_unknown</code> flag for telling the deriver to simply ignore any fields which are missing. This is particularly useful when you only wish to partially decode a yaml value.</p><p>Consider the following yaml:</p><pre class="language-ocaml"><code>let yaml = &quot;name: Bob\nage: 42\nmisc: We don't need this!&quot;</code></pre><p>If we try to do the normal decoding of this but only partially extract the fields, it will throw an error.</p><pre class="language-ocaml"><code># type t = {
+    name : string;
+    age : int;
+  }[@@deriving of_yaml];;
+type t = { name : string; age : int; }
+val of_yaml :
+  [&gt; `O of (string * [&gt; `Float of float | `String of string ]) list ] -&gt;
+  (t, [&gt; `Msg of string ]) result = &lt;fun&gt;
+
+# Yaml.of_string_exn yaml |&gt; of_yaml;;
+- : (t, [&gt; `Msg of string ]) result =
+Error (`Msg &quot;Failed to find the case for: misc&quot;)</code></pre><p>Instead we tell the deriver to ignore unknown fields.</p><pre class="language-ocaml"><code>type t = {
+  name : string;
+  age : int;
+}[@@deriving of_yaml ~skip_unknown]</code></pre><pre class="language-ocaml"><code># Yaml.of_string_exn yaml |&gt; of_yaml;;
+- : (t, [&gt; `Msg of string ]) result = Ok {name = &quot;Bob&quot;; age = 42}</code></pre><h2 id="implementation-details"><a href="#implementation-details" class="anchor"></a>Implementation Details</h2><p>One important thing is that <code>'a option</code> values within records will return <code>None</code> if the Yaml you are trying to convert does not exist.</p><table class="odoc-table"><tr><th><p>OCaml Type</p></th><th><p>Yaml Type</p></th></tr><tr><td><p><code>int</code></p></td><td><p><code>`Float</code></p></td></tr><tr><td><p><code>float</code></p></td><td><p><code>`Float</code></p></td></tr><tr><td><p><code>string</code></p></td><td><p><code>`String</code></p></td></tr><tr><td><p><code>bool</code></p></td><td><p><code>`Bool</code></p></td></tr><tr><td><p><code>None</code></p></td><td><p><code>`Null</code></p></td></tr><tr><td><p><code>list</code></p></td><td><p><code> `A []</code></p></td></tr><tr><td><p><code>array</code></p></td><td><p><code> `A []</code></p></td></tr><tr><td><p><code>record</code> e.g <code>{ name : string }</code></p></td><td><p><code>`O [(&quot;name&quot;, `String s)]</code></p></td></tr><tr><td><p><code>A of int</code> or <code> [`A of int]</code></p></td><td><p><code>`O [(&quot;A&quot;, `A [`Float f])]</code></p></td></tr></table></div></body></html>
