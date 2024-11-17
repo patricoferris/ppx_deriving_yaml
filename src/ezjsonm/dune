@@ -3,7 +3,7 @@
  (public_name ppx_deriving_ezjsonm)
  (modules ppx_deriving_ezjsonm)
  (kind ppx_deriver)
- (libraries ppxlib ppx_deriving_yaml.common)
+ (libraries ppxlib ppx_deriving_ezjsonm.common)
  (ppx_runtime_libraries ezjsonm)
  (preprocess
   (pps ppxlib.metaquot)))

@@ -1,6 +1,24 @@
 (library
  (name ppx_deriving_yaml_common)
+ (modules ppx_deriving_yaml_common)
  (public_name ppx_deriving_yaml.common)
+ (libraries ppxlib)
+ (preprocess
+  (pps ppxlib.metaquot)))
+
+(rule
+ (alias default)
+ (targets ppx_deriving_ezjsonm_common.ml ppx_deriving_ezjsonm_common.mli)
+ (deps ppx_deriving_yaml_common.ml ppx_deriving_yaml_common.mli)
+ (action
+  (progn
+   (copy ppx_deriving_yaml_common.ml ppx_deriving_ezjsonm_common.ml)
+   (copy ppx_deriving_yaml_common.mli ppx_deriving_ezjsonm_common.mli))))
+
+(library
+ (name ppx_deriving_ezjsonm_common)
+ (modules ppx_deriving_ezjsonm_common)
+ (public_name ppx_deriving_ezjsonm.common)
  (libraries ppxlib)
  (preprocess
   (pps ppxlib.metaquot)))

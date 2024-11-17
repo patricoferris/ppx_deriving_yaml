@@ -1,5 +1,4 @@
 open Ppxlib
-open Ppx_deriving_yaml_common
 
 module Backend = struct
   let backend = "yaml"
@@ -35,7 +34,7 @@ module Backend = struct
   end
 end
 
-module Value = Value.Make (Backend)
+module Value = Ppx_deriving_yaml_common.Make (Backend)
 
 let intf_generator intf = Deriving.Generator.V2.make_noarg intf
 
