@@ -2,7 +2,7 @@
 opam-version: "2.0"
 synopsis: "Yaml PPX Deriver"
 description:
-  "Deriving conversion functions to and from yaml for your OCaml types."
+  "Deriving conversion functions to and from JSON for your OCaml types."
 maintainer: ["patrick@sirref.org"]
 authors: ["Patrick Ferris"]
 license: "ISC"
@@ -10,7 +10,7 @@ homepage: "https://github.com/patricoferris/ppx_deriving_yaml"
 bug-reports: "https://github.com/patricoferris/ppx_deriving_yaml/issues"
 depends: [
   "dune" {>= "3.14"}
-  "yaml"
+  "ezjsonm"
   "alcotest" {with-test}
   "mdx" {with-test & >= "2.0.0"}
   "ocaml" {>= "4.08.1"}

@@ -1,0 +1,73 @@
+{1 Deriving JSON}
+
+This deriver generates code targetted at the {! Ezjsonm} library.
+This shares a core type with the Yaml library meaning the deriver
+works in exactly the same way as [ppx_deriving_yaml].
+
+The derivers favour usefulness over efficiency.
+
+{2 A Simple Example}
+
+To use the library, add a preprocessing stanza to your dune library.
+
+{@ocaml skip[
+(preprocess
+  (pps
+   ppx_deriving_ezjsonm))
+]}
+
+So the documentation can include checked code examples, we first must require the
+deriver.
+
+{@ocaml[
+# #require "ppx_deriving_ezjsonm";;
+]}
+
+From there, you can annotate your type declarations with [[@@deriving ezjsonm]].
+By default this will generate two functions, [of_yaml] and [to_yaml]. If the type
+is not called [t], the type's name will be prepended to these functions separated
+by a single hyphen.
+
+{@ocaml[
+# module Person : sig
+    type t [@@deriving ezjsonm]
+  val set_name : t -> string -> t
+  end = struct 
+    type t = {
+      name : string;
+      age : int;
+    }[@@deriving ezjsonm]
+    let set_name t name = { t with name }
+  end;;
+module Person :
+  sig
+    type t
+    val to_ezjsonm : t -> Ezjsonm.value
+    val of_ezjsonm : Ezjsonm.value -> (t, [> `Msg of string ]) result
+    val set_name : t -> string -> t
+  end
+]}
+
+You can then use these functions in conjunction with the {! Ezjsonm} libary to read, manipulate
+and write JSON values. For example, this little JSON value:
+
+{@ocaml[
+# let raw_json = "{\"name\": \"Alice\", \"age\": 42 }"
+val raw_json : string = "{\"name\": \"Alice\", \"age\": 42 }"
+# let p = Ezjsonm.value_from_string raw_json 
+  |> Person.of_ezjsonm
+  |> Result.get_ok;;
+val p : Person.t = <abstr>
+]}
+
+Then we change the name of the person and convert back to JSON.
+
+{@ocaml[
+# Person.set_name p "Bob" |> Person.to_ezjsonm |> Ezjsonm.value_to_string;;
+- : string = "{\"name\":\"Bob\",\"age\":42}"
+]}
+
+{2 Attributes}
+
+For more information about the possible attributes, please see the {{: https://ocaml.org/p/ppx_deriving_yaml} documentation
+for [ppx_deriving_yaml]}.

@@ -1,0 +1,17 @@
+(library
+ (name ppx_deriving_yaml)
+ (public_name ppx_deriving_yaml)
+ (modules ppx_deriving_yaml)
+ (kind ppx_deriver)
+ (libraries ppxlib ppx_deriving_yaml.common)
+ (ppx_runtime_libraries yaml)
+ (preprocess
+  (pps ppxlib.metaquot)))
+
+(mdx
+ (files index.mld)
+ (package ppx_deriving_yaml)
+ (libraries ppx_deriving_yaml yaml))
+
+(documentation
+ (package ppx_deriving_yaml))

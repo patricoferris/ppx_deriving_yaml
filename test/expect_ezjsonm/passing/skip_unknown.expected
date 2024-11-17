@@ -1,0 +1,42 @@
+type t = {
+  name: string ;
+  age: int }[@@deriving of_ezjsonm ~skip_unknown]
+include
+  struct
+    let of_ezjsonm =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | `O xs ->
+          let rec loop xs ((arg0, arg1) as _state) =
+            match xs with
+            | ("name", x)::xs ->
+                loop xs
+                  (((function
+                     | `String x -> Ok x
+                     | _ ->
+                         Error
+                           (`Msg
+                              "Was expecting 'string' but got a different type"))
+                      x), arg1)
+            | ("age", x)::xs ->
+                loop xs
+                  (arg0,
+                    ((function
+                      | `Float x -> Ok (int_of_float x)
+                      | _ ->
+                          Error
+                            (`Msg
+                               "Was expecting 'int' but got a different type"))
+                       x))
+            | [] ->
+                arg1 >>=
+                  ((fun arg1 ->
+                      arg0 >>= (fun arg0 -> Ok { name = arg0; age = arg1 })))
+            | _::xs -> loop xs _state in
+          loop xs
+            ((Error (`Msg "Didn't find the function for key: name")),
+              (Error (`Msg "Didn't find the function for key: age")))
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
