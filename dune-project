@@ -21,7 +21,7 @@
  (depends
   yaml
   (alcotest :with-test)
-  (mdx (and :with-test (>= 2.0.0)))
+  (mdx (and :with-test (>= 2.4.1)))
   (ppx_deriving :with-test) ; dune still puts this in META file ...
   (ocaml
    (>= 4.08.1))
@@ -37,7 +37,7 @@
  (depends
   ezjsonm
   (alcotest :with-test)
-  (mdx (and :with-test (>= 2.0.0)))
+  (mdx (and :with-test (>= 2.4.1)))
   (ppx_deriving :with-test) ; dune still puts this in META file ...
   (ocaml
    (>= 4.08.1))
