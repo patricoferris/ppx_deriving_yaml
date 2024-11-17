@@ -1,7 +1,7 @@
 (executable
  (name pp)
  (modules pp)
- (libraries ppx_deriving_yaml ppxlib))
+ (libraries ppx_deriving_ezjsonm ppxlib))
 
 (include dune.inc)
 
@@ -16,6 +16,6 @@
 
 (rule
  (alias runtest)
- (package ppx_deriving_yaml)
+ (package ppx_deriving_ezjsonm)
  (action
   (diff dune.inc dune.inc.gen)))

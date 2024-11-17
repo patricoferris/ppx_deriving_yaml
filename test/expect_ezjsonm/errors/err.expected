@@ -1,34 +1,34 @@
-type t = int -> int[@@deriving yaml]
+type t = int -> int[@@deriving ezjsonm]
 include
   struct
     let _ = fun (_ : t) -> ()
-    let to_yaml = [%ocaml.error "Functions cannot be converted yaml"]
-    let _ = to_yaml
-    let of_yaml = [%ocaml.error "Functions cannot be converted yaml"]
-    let _ = of_yaml
+    let to_ezjsonm = [%ocaml.error "Functions cannot be converted ezjsonm"]
+    let _ = to_ezjsonm
+    let of_ezjsonm = [%ocaml.error "Functions cannot be converted ezjsonm"]
+    let _ = of_ezjsonm
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type u = int -> int[@@deriving yaml]
+type u = int -> int[@@deriving ezjsonm]
 include
   struct
     let _ = fun (_ : u) -> ()
-    let u_to_yaml = [%ocaml.error "Functions cannot be converted yaml"]
-    let _ = u_to_yaml
-    let u_of_yaml = [%ocaml.error "Functions cannot be converted yaml"]
-    let _ = u_of_yaml
+    let u_to_ezjsonm = [%ocaml.error "Functions cannot be converted ezjsonm"]
+    let _ = u_to_ezjsonm
+    let u_of_ezjsonm = [%ocaml.error "Functions cannot be converted ezjsonm"]
+    let _ = u_of_ezjsonm
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type v = int[@@deriving yaml]
+type v = int[@@deriving ezjsonm]
 include
   struct
     let _ = fun (_ : v) -> ()
-    let v_to_yaml (x : int) = `Float (float_of_int x)
-    let _ = v_to_yaml
-    let v_of_yaml =
+    let v_to_ezjsonm (x : int) = `Float (float_of_int x)
+    let _ = v_to_ezjsonm
+    let v_of_ezjsonm =
       function
       | `Float x -> Ok (int_of_float x)
       | _ -> Error (`Msg "Was expecting 'int' but got a different type")
-    let _ = v_of_yaml
+    let _ = v_of_ezjsonm
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type w = ..[@@deriving yaml]
+type w = ..[@@deriving ezjsonm]
 include
   struct
     let _ = fun (_ : w) -> ()
@@ -38,7 +38,7 @@ include
     let error = [%ocaml.error "Cannot derive anything for this type"]
     let _ = error
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type x[@@deriving yaml]
+type x[@@deriving ezjsonm]
 include
   struct
     let _ = fun (_ : x) -> ()
@@ -50,4 +50,4 @@ include
         "Failed to derive something for an abstract type with no manifest!"]
     let _ = error_encountered
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
-let _ = v_of_yaml
+let _ = v_of_ezjsonm

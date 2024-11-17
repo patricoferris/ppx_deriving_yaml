@@ -1,5 +1,6 @@
 (test
  (name test)
+ (package ppx_deriving_yaml)
  (libraries alcotest yaml)
  (preprocess
   (pps ppx_deriving_yaml)))
