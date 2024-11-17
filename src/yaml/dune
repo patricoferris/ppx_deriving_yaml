@@ -11,7 +11,7 @@
 (mdx
  (files index.mld)
  (package ppx_deriving_yaml)
- (libraries ppx_deriving_yaml yaml))
+ (libraries ppxlib ppx_deriving_yaml yaml))
 
 (documentation
  (package ppx_deriving_yaml))

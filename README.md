@@ -2,8 +2,8 @@
 
 This repository contains the source code for:
 
- - [ppx_deriving_yaml] a ppx deriver for generating conversion functions for Yaml.
- - [ppx_deriving_ezjsonm] a ppx deriver for generating conversation functions for JSON (using the [Ezjsonm][] library).
+ - `ppx_deriving_yaml` a ppx deriver for generating conversion functions for Yaml.
+ - `ppx_deriving_ezjsonm` a ppx deriver for generating conversation functions for JSON (using the [Ezjsonm][] library).
 
 ## Installation
 
