@@ -1,4 +1,4 @@
-(lang dune 3.0)
+(lang dune 3.14)
 
 (name ppx_deriving_yaml)
 
@@ -15,17 +15,34 @@
 
 (package
  (name ppx_deriving_yaml)
- (synopsis "Yaml PPX Deriver")
+ (synopsis "Yaml PPX")
  (description "Deriving conversion functions to and from yaml for your OCaml types.")
+ (tags ("ppx" "deriver" "yaml"))
  (depends
   yaml
-  ppx_deriving ; needed for https://github.com/ocaml/dune/issues/1327
   (alcotest :with-test)
-  (mdx (and :with-test (>= 2.0.0)))
+  (mdx (and :with-test (>= 2.4.1)))
+  (ppx_deriving :with-test) ; dune still puts this in META file ...
   (ocaml
    (>= 4.08.1))
   (ppxlib
    (>= 0.25.0))
   ))
 
-(using mdx 0.1)
+(package
+ (name ppx_deriving_ezjsonm)
+ (synopsis "Ezjsonm PPX")
+ (description "Deriving conversion functions to and from JSON for your OCaml types.")
+ (tags ("ppx" "deriver" "json"))
+ (depends
+  ezjsonm
+  (alcotest :with-test)
+  (mdx (and :with-test (>= 2.4.1)))
+  (ppx_deriving :with-test) ; dune still puts this in META file ...
+  (ocaml
+   (>= 4.08.1))
+  (ppxlib
+   (>= 0.25.0))
+  ))
+
+(using mdx 0.3)

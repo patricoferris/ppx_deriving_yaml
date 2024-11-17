@@ -1,14 +1,14 @@
 type var =
   | Hello 
-  | World of string [@@deriving yaml]
+  | World of string [@@deriving ezjsonm]
 include
   struct
-    let var_to_yaml =
+    let var_to_ezjsonm =
       function
       | Hello -> `O [("Hello", (`A []))]
       | World arg0 ->
           `O [("World", (`A [((fun (x : string) -> `String x)) arg0]))]
-    let var_of_yaml =
+    let var_of_ezjsonm =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
       function
@@ -23,16 +23,16 @@ include
             >>= ((fun arg0 -> Stdlib.Result.Ok (World arg0)))
       | _ -> Stdlib.Error (`Msg "no match for this variant expression")
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
-type poly_var = [ `Hello  | `World of string ][@@deriving yaml]
+type poly_var = [ `Hello  | `World of string ][@@deriving ezjsonm]
 include
   struct
-    let poly_var_to_yaml =
+    let poly_var_to_ezjsonm =
       function
       | `Hello -> `O [("Hello", (`A []))]
       | `World x ->
           ((fun (x : string) -> `String x) x) |>
             ((fun x -> `O [("World", (`A [x]))]))
-    let poly_var_of_yaml =
+    let poly_var_of_ezjsonm =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
       function
@@ -47,10 +47,10 @@ include
       | _ -> Error (`Msg "failed converting variant")
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type a = {
-  x: [ `Simple  | `Example ] }[@@deriving yaml]
+  x: [ `Simple  | `Example ] }[@@deriving ezjsonm]
 include
   struct
-    let a_to_yaml (x : a) =
+    let a_to_ezjsonm (x : a) =
       `O
         (Stdlib.List.filter_map (fun x -> x)
            [Some
@@ -58,7 +58,7 @@ include
                 (((function
                    | `Simple -> `O [("Simple", (`A []))]
                    | `Example -> `O [("Example", (`A []))])) x.x))])
-    let a_of_yaml =
+    let a_of_ezjsonm =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
       function
@@ -76,17 +76,18 @@ include
                         Stdlib.Result.Ok `Example
                     | _ -> Error (`Msg "failed converting variant")) x)
             | [] -> arg0 >>= ((fun arg0 -> Ok { x = arg0 }))
-            | (x, y)::_ -> Error (`Msg (x ^ (Yaml.to_string_exn y))) in
+            | (x, _y)::_ ->
+                Error (`Msg ("Failed to find the case for: " ^ x)) in
           loop xs (Error (`Msg "Didn't find the function for key: x"))
       | _ ->
           Error (`Msg "Failed building a key-value object expecting a list")
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type t = {
   name: string ;
-  age: int option }[@@deriving yaml]
+  age: int option }[@@deriving ezjsonm]
 include
   struct
-    let to_yaml (x : t) =
+    let to_ezjsonm (x : t) =
       `O
         (Stdlib.List.filter_map (fun x -> x)
            [Some ("name", (((fun (x : string) -> `String x)) x.name));
@@ -96,7 +97,7 @@ include
                   | None -> `Null
                   | Some t -> ((fun (x : int) -> `Float (float_of_int x))) t))
                   x.age))])
-    let of_yaml =
+    let of_ezjsonm =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
       function
@@ -130,7 +131,8 @@ include
                 arg1 >>=
                   ((fun arg1 ->
                       arg0 >>= (fun arg0 -> Ok { name = arg0; age = arg1 })))
-            | (x, y)::_ -> Error (`Msg (x ^ (Yaml.to_string_exn y))) in
+            | (x, _y)::_ ->
+                Error (`Msg ("Failed to find the case for: " ^ x)) in
           loop xs
             ((Error (`Msg "Didn't find the function for key: name")),
               (Ok None))
@@ -138,10 +140,10 @@ include
           Error (`Msg "Failed building a key-value object expecting a list")
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type u = {
-  name: string [@default "Una"]}[@@deriving to_yaml]
+  name: string [@default "Una"]}[@@deriving to_ezjsonm]
 include
   struct
-    let u_to_yaml (x : u) =
+    let u_to_ezjsonm (x : u) =
       `O
         (Stdlib.List.filter_map (fun x -> x)
            [((fun x ->
@@ -151,10 +153,10 @@ include
               x.name])
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type v = {
-  age: int [@key "AGE"][@default 10]}[@@deriving of_yaml]
+  age: int [@key "AGE"][@default 10]}[@@deriving of_ezjsonm]
 include
   struct
-    let v_of_yaml =
+    let v_of_ezjsonm =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
       function
@@ -171,21 +173,22 @@ include
                              "Was expecting 'int' but got a different type"))
                      x)
             | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
-            | (x, y)::_ -> Error (`Msg (x ^ (Yaml.to_string_exn y))) in
+            | (x, _y)::_ ->
+                Error (`Msg ("Failed to find the case for: " ^ x)) in
           loop xs (Ok 10)
       | _ ->
           Error (`Msg "Failed building a key-value object expecting a list")
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type w = {
-  age: int [@to_yaml fun i -> `Float (float_of_int (i - 10))]}[@@deriving
-                                                                yaml]
+  age: int [@to_ezjsonm fun i -> `Float (float_of_int (i - 10))]}[@@deriving
+                                                                   ezjsonm]
 include
   struct
-    let w_to_yaml (x : w) =
+    let w_to_ezjsonm (x : w) =
       `O
         (Stdlib.List.filter_map (fun x -> x)
            [Some ("age", (((fun i -> `Float (float_of_int (i - 10)))) x.age))])
-    let w_of_yaml =
+    let w_of_ezjsonm =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
       function
@@ -202,7 +205,8 @@ include
                              "Was expecting 'int' but got a different type"))
                      x)
             | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
-            | (x, y)::_ -> Error (`Msg (x ^ (Yaml.to_string_exn y))) in
+            | (x, _y)::_ ->
+                Error (`Msg ("Failed to find the case for: " ^ x)) in
           loop xs (Error (`Msg "Didn't find the function for key: age"))
       | _ ->
           Error (`Msg "Failed building a key-value object expecting a list")
@@ -210,18 +214,18 @@ include
 type x =
   {
   age: int
-    [@of_yaml
+    [@of_ezjsonm
       function
       | `Float f -> Ok (int_of_float (f +. 10.))
-      | _ -> Error (`Msg "Expected a Yaml `Float")]}[@@deriving yaml]
+      | _ -> Error (`Msg "Expected a Yaml `Float")]}[@@deriving ezjsonm]
 include
   struct
-    let x_to_yaml (x : x) =
+    let x_to_ezjsonm (x : x) =
       `O
         (Stdlib.List.filter_map (fun x -> x)
            [Some
               ("age", (((fun (x : int) -> `Float (float_of_int x))) x.age))])
-    let x_of_yaml =
+    let x_of_ezjsonm =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
       function
@@ -234,7 +238,8 @@ include
                     | `Float f -> Ok (int_of_float (f +. 10.))
                     | _ -> Error (`Msg "Expected a Yaml `Float")) x)
             | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
-            | (x, y)::_ -> Error (`Msg (x ^ (Yaml.to_string_exn y))) in
+            | (x, _y)::_ ->
+                Error (`Msg ("Failed to find the case for: " ^ x)) in
           loop xs (Error (`Msg "Didn't find the function for key: age"))
       | _ ->
           Error (`Msg "Failed building a key-value object expecting a list")

@@ -1,0 +1,246 @@
+type var =
+  | Hello 
+  | World of string [@@deriving yaml]
+include
+  struct
+    let var_to_yaml =
+      function
+      | Hello -> `O [("Hello", (`A []))]
+      | World arg0 ->
+          `O [("World", (`A [((fun (x : string) -> `String x)) arg0]))]
+    let var_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | `O (("Hello", `A [])::[]) -> Stdlib.Result.Ok Hello
+      | `O (("World", `A (arg0::[]))::[]) ->
+          ((function
+            | `String x -> Ok x
+            | _ ->
+                Error
+                  (`Msg "Was expecting 'string' but got a different type"))
+             arg0)
+            >>= ((fun arg0 -> Stdlib.Result.Ok (World arg0)))
+      | _ -> Stdlib.Error (`Msg "no match for this variant expression")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type poly_var = [ `Hello  | `World of string ][@@deriving yaml]
+include
+  struct
+    let poly_var_to_yaml =
+      function
+      | `Hello -> `O [("Hello", (`A []))]
+      | `World x ->
+          ((fun (x : string) -> `String x) x) |>
+            ((fun x -> `O [("World", (`A [x]))]))
+    let poly_var_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | `O (("Hello", `A [])::[]) -> Stdlib.Result.Ok `Hello
+      | `O (("World", `A (x::[]))::[]) ->
+          ((function
+            | `String x -> Ok x
+            | _ ->
+                Error
+                  (`Msg "Was expecting 'string' but got a different type")) x)
+            >>= ((fun x -> Stdlib.Result.Ok (`World x)))
+      | _ -> Error (`Msg "failed converting variant")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type a = {
+  x: [ `Simple  | `Example ] }[@@deriving yaml]
+include
+  struct
+    let a_to_yaml (x : a) =
+      `O
+        (Stdlib.List.filter_map (fun x -> x)
+           [Some
+              ("x",
+                (((function
+                   | `Simple -> `O [("Simple", (`A []))]
+                   | `Example -> `O [("Example", (`A []))])) x.x))])
+    let a_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | `O xs ->
+          let rec loop xs (arg0 as _state) =
+            match xs with
+            | ("x", x)::xs ->
+                loop xs
+                  ((let (>>=) v f =
+                      match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+                    function
+                    | `O (("Simple", `A [])::[]) -> Stdlib.Result.Ok `Simple
+                    | `O (("Example", `A [])::[]) ->
+                        Stdlib.Result.Ok `Example
+                    | _ -> Error (`Msg "failed converting variant")) x)
+            | [] -> arg0 >>= ((fun arg0 -> Ok { x = arg0 }))
+            | (x, _y)::_ ->
+                Error (`Msg ("Failed to find the case for: " ^ x)) in
+          loop xs (Error (`Msg "Didn't find the function for key: x"))
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type t = {
+  name: string ;
+  age: int option }[@@deriving yaml]
+include
+  struct
+    let to_yaml (x : t) =
+      `O
+        (Stdlib.List.filter_map (fun x -> x)
+           [Some ("name", (((fun (x : string) -> `String x)) x.name));
+           Some
+             ("age",
+               (((function
+                  | None -> `Null
+                  | Some t -> ((fun (x : int) -> `Float (float_of_int x))) t))
+                  x.age))])
+    let of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | `O xs ->
+          let rec loop xs ((arg0, arg1) as _state) =
+            match xs with
+            | ("name", x)::xs ->
+                loop xs
+                  (((function
+                     | `String x -> Ok x
+                     | _ ->
+                         Error
+                           (`Msg
+                              "Was expecting 'string' but got a different type"))
+                      x), arg1)
+            | ("age", x)::xs ->
+                loop xs
+                  (arg0,
+                    ((function
+                      | `Null -> Ok None
+                      | x ->
+                          ((function
+                            | `Float x -> Ok (int_of_float x)
+                            | _ ->
+                                Error
+                                  (`Msg
+                                     "Was expecting 'int' but got a different type"))
+                             x)
+                            >>= ((fun x -> Ok (Some x)))) x))
+            | [] ->
+                arg1 >>=
+                  ((fun arg1 ->
+                      arg0 >>= (fun arg0 -> Ok { name = arg0; age = arg1 })))
+            | (x, _y)::_ ->
+                Error (`Msg ("Failed to find the case for: " ^ x)) in
+          loop xs
+            ((Error (`Msg "Didn't find the function for key: name")),
+              (Ok None))
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type u = {
+  name: string [@default "Una"]}[@@deriving to_yaml]
+include
+  struct
+    let u_to_yaml (x : u) =
+      `O
+        (Stdlib.List.filter_map (fun x -> x)
+           [((fun x ->
+                if Stdlib.(=) x "Una"
+                then None
+                else Some ("name", (((fun (x : string) -> `String x)) x))))
+              x.name])
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type v = {
+  age: int [@key "AGE"][@default 10]}[@@deriving of_yaml]
+include
+  struct
+    let v_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | `O xs ->
+          let rec loop xs (arg0 as _state) =
+            match xs with
+            | ("AGE", x)::xs ->
+                loop xs
+                  ((function
+                    | `Float x -> Ok (int_of_float x)
+                    | _ ->
+                        Error
+                          (`Msg
+                             "Was expecting 'int' but got a different type"))
+                     x)
+            | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
+            | (x, _y)::_ ->
+                Error (`Msg ("Failed to find the case for: " ^ x)) in
+          loop xs (Ok 10)
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type w = {
+  age: int [@to_yaml fun i -> `Float (float_of_int (i - 10))]}[@@deriving
+                                                                yaml]
+include
+  struct
+    let w_to_yaml (x : w) =
+      `O
+        (Stdlib.List.filter_map (fun x -> x)
+           [Some ("age", (((fun i -> `Float (float_of_int (i - 10)))) x.age))])
+    let w_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | `O xs ->
+          let rec loop xs (arg0 as _state) =
+            match xs with
+            | ("age", x)::xs ->
+                loop xs
+                  ((function
+                    | `Float x -> Ok (int_of_float x)
+                    | _ ->
+                        Error
+                          (`Msg
+                             "Was expecting 'int' but got a different type"))
+                     x)
+            | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
+            | (x, _y)::_ ->
+                Error (`Msg ("Failed to find the case for: " ^ x)) in
+          loop xs (Error (`Msg "Didn't find the function for key: age"))
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type x =
+  {
+  age: int
+    [@of_yaml
+      function
+      | `Float f -> Ok (int_of_float (f +. 10.))
+      | _ -> Error (`Msg "Expected a Yaml `Float")]}[@@deriving yaml]
+include
+  struct
+    let x_to_yaml (x : x) =
+      `O
+        (Stdlib.List.filter_map (fun x -> x)
+           [Some
+              ("age", (((fun (x : int) -> `Float (float_of_int x))) x.age))])
+    let x_of_yaml =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | `O xs ->
+          let rec loop xs (arg0 as _state) =
+            match xs with
+            | ("age", x)::xs ->
+                loop xs
+                  ((function
+                    | `Float f -> Ok (int_of_float (f +. 10.))
+                    | _ -> Error (`Msg "Expected a Yaml `Float")) x)
+            | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
+            | (x, _y)::_ ->
+                Error (`Msg ("Failed to find the case for: " ^ x)) in
+          loop xs (Error (`Msg "Didn't find the function for key: age"))
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]

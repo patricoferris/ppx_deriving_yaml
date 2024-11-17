@@ -1,5 +1,4 @@
-(mdx
- (files README.md)
- ; Weird, bytecode-only ppx toplevel bug thing :S
- (enabled_if %{bin-available:ocamlopt})
- (packages ppx_deriving_yaml))
+(env
+ (dev
+  (flags
+   (:standard -w -69))))

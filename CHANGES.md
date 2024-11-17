@@ -1,3 +1,7 @@
+## v0.4.0 (17/11/2024) Cambridge
+
+- Refactor library to support ppx_deriving_ezjsonm (a JSON backend) (#59, @patricoferris)
+
 ## v0.3.0 (06/05/2024) Cambridge
 
 - Fix bug with unused infix operators (#56, @patricoferris)

@@ -57,7 +57,8 @@ include
                   ((fun arg1 ->
                       arg0 >>=
                         (fun arg0 -> Ok { name = arg0; children = arg1 })))
-            | (x, y)::_ -> Error (`Msg (x ^ (Yaml.to_string_exn y))) in
+            | (x, _y)::_ ->
+                Error (`Msg ("Failed to find the case for: " ^ x)) in
           loop xs
             ((Error (`Msg "Didn't find the function for key: name")),
               (Error (`Msg "Didn't find the function for key: children")))
