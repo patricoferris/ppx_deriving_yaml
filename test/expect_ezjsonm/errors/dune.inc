@@ -23,6 +23,7 @@
 ; Compare the post-processed output to the .expected file
 (rule
  (alias runtest)
+ 
  (package ppx_deriving_ezjsonm)
  (action
   (diff err.expected err.actual)))

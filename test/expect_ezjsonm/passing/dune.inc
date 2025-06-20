@@ -20,6 +20,7 @@
 ; Compare the post-processed output to the .expected file
 (rule
  (alias runtest)
+ (enabled_if (>= %{ocaml_version} "5.2.0"))
  (package ppx_deriving_ezjsonm)
  (action
   (diff recursive.expected recursive.actual)))
@@ -54,6 +55,7 @@
 ; Compare the post-processed output to the .expected file
 (rule
  (alias runtest)
+ 
  (package ppx_deriving_ezjsonm)
  (action
   (diff simple.expected simple.actual)))
@@ -88,6 +90,7 @@
 ; Compare the post-processed output to the .expected file
 (rule
  (alias runtest)
+ 
  (package ppx_deriving_ezjsonm)
  (action
   (diff skip_unknown.expected skip_unknown.actual)))
