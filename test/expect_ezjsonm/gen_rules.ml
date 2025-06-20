@@ -59,7 +59,8 @@ let output_stanzas ~expect_failure filename =
        %s@,\
        (package ppx_deriving_ezjsonm)@,\
        @[<v 1>(action@,\
-       @[<hov 2>(diff@ %s.expected@ %s.actual)@])@])@]" (lookup_enabled base) base base
+       @[<hov 2>(diff@ %s.expected@ %s.actual)@])@])@]" (lookup_enabled base)
+      base base
   in
   let pp_run_alias ppf base =
     (* If we expect the derivation to succeed, then we should be able to compile

@@ -59,7 +59,8 @@ let output_stanzas ~expect_failure filename =
        (package ppx_deriving_yaml)@,\
        %s\n\
        @[<v 1>(action@,\
-       @[<hov 2>(diff@ %s.expected@ %s.actual)@])@])@]" (lookup_enabled base) base base 
+       @[<hov 2>(diff@ %s.expected@ %s.actual)@])@])@]" (lookup_enabled base)
+      base base
   in
   let pp_run_alias ppf base =
     (* If we expect the derivation to succeed, then we should be able to compile
@@ -74,7 +75,7 @@ let output_stanzas ~expect_failure filename =
          %s\n\
          (package ppx_deriving_yaml)@,\
          @[<v 1>(action@,\
-         @[<hov 2>(run@ ./%s.exe)@])@])@]" (lookup_enabled base) base 
+         @[<hov 2>(run@ ./%s.exe)@])@])@]" (lookup_enabled base) base
     else ()
   in
   Format.set_margin 80;
