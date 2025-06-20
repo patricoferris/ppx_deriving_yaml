@@ -34,19 +34,17 @@ include
                       | `A lst ->
                           let (>>=) v f =
                             match v with | Ok v -> f v | Error _ as e -> e in
-                          ((fun f ->
-                              fun lst ->
-                                (Stdlib.List.fold_left
-                                   (fun acc ->
-                                      fun x ->
-                                        match acc with
-                                        | Stdlib.Ok acc ->
-                                            (f x) >>=
-                                              ((fun x -> Stdlib.Ok (x :: acc)))
-                                        | Stdlib.Error e -> Stdlib.Error e)
-                                   (Stdlib.Ok []) lst)
-                                  >>=
-                                  (fun lst -> Stdlib.Ok (Stdlib.List.rev lst))))
+                          ((fun f lst ->
+                              (Stdlib.List.fold_left
+                                 (fun acc x ->
+                                    match acc with
+                                    | Stdlib.Ok acc ->
+                                        (f x) >>=
+                                          ((fun x -> Stdlib.Ok (x :: acc)))
+                                    | Stdlib.Error e -> Stdlib.Error e)
+                                 (Stdlib.Ok []) lst)
+                                >>=
+                                (fun lst -> Stdlib.Ok (Stdlib.List.rev lst))))
                             (fun x -> of_ezjsonm x) lst
                       | _ ->
                           Error

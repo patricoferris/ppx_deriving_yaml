@@ -11,7 +11,7 @@
 (mdx
  (files index.mld)
  (package ppx_deriving_ezjsonm)
- (libraries ppx_deriving_ezjsonm ezjsonm))
+ (libraries ppxlib ppx_deriving_ezjsonm ezjsonm))
 
 (documentation
  (package ppx_deriving_ezjsonm))

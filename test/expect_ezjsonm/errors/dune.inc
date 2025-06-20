@@ -11,6 +11,7 @@
 ; Run the PPX on the `.ml` file
 (rule
  (targets err.actual)
+ 
  (deps
   (:pp pp.exe)
   (:input err.ml))
@@ -22,6 +23,7 @@
 ; Compare the post-processed output to the .expected file
 (rule
  (alias runtest)
+ 
  (package ppx_deriving_ezjsonm)
  (action
   (diff err.expected err.actual)))

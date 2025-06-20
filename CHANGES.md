@@ -1,3 +1,7 @@
+## v0.4.1 (20/06/2025) Paris
+
+- Update for latest ppxlib (#60, @patricoferris)
+
 ## v0.4.0 (17/11/2024) Cambridge
 
 - Refactor library to support ppx_deriving_ezjsonm (a JSON backend) (#59, @patricoferris)
