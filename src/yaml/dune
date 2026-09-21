@@ -3,15 +3,24 @@
  (public_name ppx_deriving_yaml)
  (modules ppx_deriving_yaml)
  (kind ppx_deriver)
- (libraries ppxlib ppx_deriving_yaml.common)
- (ppx_runtime_libraries yaml)
+ (libraries ppxlib ppx_deriving_yaml.common yaml)
+ (ppx_runtime_libraries ppx_deriving_yaml.runtime yaml)
  (preprocess
   (pps ppxlib.metaquot)))
 
-(mdx
- (files index.mld)
- (package ppx_deriving_yaml)
- (libraries ppxlib ppx_deriving_yaml yaml))
+(library
+ (name ppx_deriving_yaml_runtime)
+ (public_name ppx_deriving_yaml.runtime)
+ (modules ppx_deriving_yaml_runtime)
+ (libraries yaml))
+
+;(mdx
+; (files index.mld)
+; (package ppx_deriving_yaml)
+; (deps
+;  (package ppx_deriving_yaml))
+; (preludes prelude.ml)
+; (libraries ppxlib ppx_deriving_yaml ppx_deriving_yaml.runtime yaml))
 
 (documentation
  (package ppx_deriving_yaml))

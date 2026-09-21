@@ -80,9 +80,24 @@ module type Backend = sig
     val to_ : (label_declaration, expression) Attribute.t
     val of_ : (label_declaration, expression) Attribute.t
   end
+
+  module Pattern : sig
+    val int : loc:Location.t -> pattern -> pattern
+    val float : loc:Location.t -> pattern -> pattern
+    val string : loc:Location.t -> pattern -> pattern
+    val bool : loc:Location.t -> pattern -> pattern
+    val list : loc:Location.t -> pattern -> pattern
+    val obj : loc:Location.t -> pattern -> pattern
+    val null : loc:Location.t -> pattern
+  end
 end
 
 module Make (B : Backend) = struct
+  let runtime_module ~loc f =
+    let backend = "Ppx_deriving_" ^ B.backend ^ "_runtime" in
+    let txt = Ldot (Lident backend, f) in
+    pexp_ident ~loc { txt; loc }
+
   let backend_constructor =
     Typ.constr (Located.lident ~loc:Location.none B.typename) []
 
@@ -113,17 +128,30 @@ module Make (B : Backend) = struct
   let rec type_to_expr typ =
     let loc = typ.ptyp_loc in
     match typ with
-    | [%type: int] -> [%expr fun (x : int) -> `Float (float_of_int x)]
-    | [%type: float] -> [%expr fun (x : float) -> `Float x]
-    | [%type: string] -> [%expr fun (x : string) -> `String x]
-    | [%type: bool] -> [%expr fun (x : bool) -> `Bool x]
-    | [%type: char] -> [%expr fun (x : char) -> `String (String.make 1 x)]
+    | [%type: int] -> [%expr fun (x : int) -> [%e runtime_module ~loc "int"] x]
+    | [%type: float] ->
+        [%expr fun (x : float) -> [%e runtime_module ~loc "float"] x]
+    | [%type: string] ->
+        [%expr fun (x : string) -> [%e runtime_module ~loc "string"] x]
+    | [%type: bool] ->
+        [%expr fun (x : bool) -> [%e runtime_module ~loc "bool"] x]
+    | [%type: char] ->
+        [%expr
+          fun (x : char) -> [%e runtime_module ~loc "string"] (String.make 1 x)]
     | [%type: [%t? typ] list] ->
-        [%expr fun x -> `A (List.map [%e type_to_expr typ] x)]
+        [%expr
+          fun x ->
+            [%e runtime_module ~loc "list"] (List.map [%e type_to_expr typ] x)]
     | [%type: [%t? typ] array] ->
-        [%expr fun x -> `A Array.(to_list (map [%e type_to_expr typ]) x)]
+        [%expr
+          fun x ->
+            [%e runtime_module ~loc "list"]
+              Array.(to_list (map [%e type_to_expr typ]) x)]
     | [%type: [%t? typ] option] ->
-        [%expr function None -> `Null | Some t -> [%e type_to_expr typ] t]
+        [%expr
+          function
+          | None -> [%e runtime_module ~loc "null"]
+          | Some t -> [%e type_to_expr typ] t]
     (* When Yaml.value or Ezjsonm.value is found in the type declaration *)
     | { ptyp_desc = Ptyp_constr ({ txt = lid; _ }, []); _ }
       when Longident.name lid = B.typename ->
@@ -149,7 +177,7 @@ module Make (B : Backend) = struct
         in
         let list_apps =
           [%expr
-            `A
+            [%e runtime_module ~loc "list"]
               [%e
                 Ast_builder.Default.elist ~loc
                   (List.mapi
@@ -170,7 +198,12 @@ module Make (B : Backend) = struct
                   | Rtag (label, true, []) ->
                       Exp.case
                         (Pat.variant label.txt None)
-                        [%expr `O [ ([%e estring ~loc label.txt], `A []) ]]
+                        [%expr
+                          [%e runtime_module ~loc "obj"]
+                            [
+                              ( [%e estring ~loc label.txt],
+                                [%e runtime_module ~loc "list"] [] );
+                            ]]
                   | Rtag (label, false, [ { ptyp_desc = Ptyp_tuple typs; _ } ])
                     ->
                       Exp.case
@@ -179,10 +212,10 @@ module Make (B : Backend) = struct
                               (Helpers.ptuple ~loc
                                  (List.mapi (fun i _ -> pvar ~loc (arg i)) typs))))
                         [%expr
-                          `O
+                          [%e runtime_module ~loc "obj"]
                             [
                               ( [%e estring ~loc label.txt],
-                                `A
+                                [%e runtime_module ~loc "list"]
                                   [%e
                                     elist ~loc
                                       (List.mapi
@@ -197,7 +230,11 @@ module Make (B : Backend) = struct
                         (Pat.variant ~loc label.txt (Some (pvar ~loc "x")))
                         [%expr
                           [%e type_to_expr t] [%e evar ~loc "x"] |> fun x ->
-                          `O [ ([%e estring ~loc label.txt], `A [ x ]) ]]
+                          [%e runtime_module ~loc "obj"]
+                            [
+                              ( [%e estring ~loc label.txt],
+                                [%e runtime_module ~loc "list"] [ x ] );
+                            ]]
                   | Rtag (label, _, _) ->
                       raise (Failed_to_derive (label.loc, "Rtag"))
                   | Rinherit ctype ->
@@ -298,7 +335,7 @@ module Make (B : Backend) = struct
     let fs = fields_to_expr fields in
     [%expr
       fun (x : [%t typ]) ->
-        `O
+        [%e runtime_module ~loc "obj"]
           (Stdlib.List.filter_map
              (fun x -> x)
              [%e Ast_builder.Default.elist ~loc fs])]
@@ -375,48 +412,61 @@ module Make (B : Backend) = struct
     | [%type: int] ->
         mk_pat_match ~loc
           [
-            ( [%pat? `Float [%p argument]],
+            ( [%pat? [%p B.Pattern.int ~loc argument]],
               [%expr Ok (int_of_float [%e expr_arg])] );
           ]
           "int"
     | [%type: float] ->
         mk_pat_match ~loc
-          [ ([%pat? `Float [%p argument]], [%expr Ok [%e expr_arg]]) ]
+          [
+            ( [%pat? [%p B.Pattern.float ~loc argument]],
+              [%expr Ok [%e expr_arg]] );
+          ]
           "float"
     | [%type: string] ->
         mk_pat_match ~loc
-          [ ([%pat? `String [%p argument]], [%expr Ok [%e expr_arg]]) ]
+          [
+            ( [%pat? [%p B.Pattern.string ~loc argument]],
+              [%expr Ok [%e expr_arg]] );
+          ]
           "string"
     | [%type: bool] ->
         mk_pat_match ~loc
-          [ ([%pat? `Bool [%p argument]], [%expr Ok [%e expr_arg]]) ]
+          [
+            ([%pat? [%p B.Pattern.bool ~loc argument]], [%expr Ok [%e expr_arg]]);
+          ]
           "bool"
     | [%type: char] ->
         mk_pat_match ~loc
-          [ ([%pat? `String [%p argument]], [%expr Ok [%e expr_arg].[0]]) ]
+          [
+            ( [%pat? [%p B.Pattern.string ~loc argument]],
+              [%expr Ok [%e expr_arg].[0]] );
+          ]
           "char"
     | [%type: [%t? typ] list] ->
         mk_pat_match ~loc
           [
-            ( [%pat? `A lst],
+            ( [%pat?
+                [%p B.Pattern.list ~loc (ppat_var ~loc { txt = "lst"; loc })]],
               [%expr
                 let ( >>= ) v f =
                   match v with Ok v -> f v | Error _ as e -> e
                 in
                 [%e Helpers.map_bind ~loc]
                   [%e of_backend_type_to_expr None typ]
-                  lst] );
+                  [%e pexp_ident ~loc { txt = Lident "lst"; loc }]] );
           ]
           "list"
     | [%type: [%t? typ] array] ->
         mk_pat_match ~loc
           [
-            ( [%pat? `A lst],
+            ( [%pat?
+                [%p B.Pattern.list ~loc (ppat_var ~loc { txt = "lst"; loc })]],
               [%expr
                 let ( >>= ) v f =
                   match v with Ok v -> f v | Error _ as e -> e
                 in
-                `A
+                [%e runtime_module ~loc "list"]
                   Array.(
                     to_list ([%e Helpers.map_bind ~loc] [%e type_to_expr typ]))]
             );
@@ -425,7 +475,7 @@ module Make (B : Backend) = struct
     | [%type: [%t? typ] option] ->
         [%expr
           function
-          | `Null -> Ok None
+          | [%p B.Pattern.null ~loc] -> Ok None
           | x ->
               [%e of_backend_type_to_expr None typ] x >>= fun x -> Ok (Some x)]
     | { ptyp_desc = Ptyp_constr ({ txt = lid; _ }, []); _ }
@@ -447,13 +497,11 @@ module Make (B : Backend) = struct
         polymorphic_function names (of_backend_type_to_expr None typ)
     | { ptyp_desc = Ptyp_tuple typs; _ } ->
         let list_pat =
-          [%pat?
-            `A
-              [%p
-                plist ~loc
-                  (List.mapi
-                     (fun i t -> Pat.var { loc = t.ptyp_loc; txt = arg i })
-                     typs)]]
+          B.Pattern.list ~loc
+          @@ plist ~loc
+               (List.mapi
+                  (fun i t -> Pat.var { loc = t.ptyp_loc; txt = arg i })
+                  typs)
         in
         let funcs =
           List.mapi
@@ -476,13 +524,19 @@ module Make (B : Backend) = struct
         in
         wrap_open_rresult ~loc (mk_pat_match ~loc [ (list_pat, expr) ] "null")
     | { ptyp_desc = Ptyp_variant (row_fields, _, _); _ } ->
+        let match_variant ~name ~args =
+          let args =
+            [%pat? [ ([%p pstring ~loc name], [%p B.Pattern.list ~loc args]) ]]
+          in
+          B.Pattern.obj ~loc args
+        in
         let cases =
           List.map
             (fun field ->
               match field.prf_desc with
               | Rtag (name, true, []) ->
                   Exp.case
-                    [%pat? `O [ ([%p pstring ~loc name.txt], `A []) ]]
+                    (match_variant ~name:name.txt ~args:[%pat? []])
                     [%expr Stdlib.Result.Ok [%e Exp.variant name.txt None]]
               | Rtag (name, false, [ { ptyp_desc = Ptyp_tuple typs; _ } ]) ->
                   let e =
@@ -499,22 +553,16 @@ module Make (B : Backend) = struct
                                        typs)))]]
                       (List.mapi (fun i t -> (t, i)) typs)
                   in
-                  Exp.case
-                    [%pat?
-                      `O
-                        [
-                          ( [%p pstring ~loc name.txt],
-                            `A
-                              [%p
-                                plist ~loc
-                                  (List.mapi
-                                     (fun i _ -> pvar ~loc (arg i))
-                                     typs)] );
-                        ]]
-                    e
+                  let pat =
+                    match_variant ~name:name.txt
+                      ~args:
+                        (plist ~loc
+                           (List.mapi (fun i _ -> pvar ~loc (arg i)) typs))
+                  in
+                  Exp.case pat e
               | Rtag (name, false, [ t ]) ->
                   Exp.case
-                    [%pat? `O [ ([%p pstring ~loc name.txt], `A [ x ]) ]]
+                    (match_variant ~name:name.txt ~args:[%pat? [ x ]])
                     [%expr
                       [%e of_backend_type_to_expr None t] x >>= fun x ->
                       Stdlib.Result.Ok
@@ -657,7 +705,7 @@ module Make (B : Backend) = struct
     let e =
       [%expr
         function
-        | `O xs ->
+        | [%p B.Pattern.obj ~loc (ppat_var ~loc { txt = "xs"; loc })] ->
             let rec loop xs
                 ([%p
                    Helpers.ptuple ~loc
@@ -744,19 +792,23 @@ module Make (B : Backend) = struct
                                        (fun i _ -> evar ~loc (Helpers.arg i))
                                        args))
                            in
-                           Exp.case
-                             [%pat?
-                               `O
+                           let exp =
+                             let args =
+                               [%pat?
                                  [
                                    ( [%p pstring ~loc name],
-                                     `A
-                                       [%p
-                                         plist ~loc
-                                           (List.mapi
-                                              (fun i _ ->
-                                                pvar ~loc (Helpers.arg i))
-                                              args)] );
+                                     [%p
+                                       B.Pattern.list ~loc
+                                       @@ plist ~loc
+                                            (List.mapi
+                                               (fun i _ ->
+                                                 pvar ~loc (Helpers.arg i))
+                                               args)] );
                                  ]]
+                             in
+                             B.Pattern.obj ~loc args
+                           in
+                           Exp.case exp
                              (monad_fold
                                 (of_backend_type_to_expr None)
                                 [%expr
@@ -876,12 +928,12 @@ module Make (B : Backend) = struct
                                          (fun i _ -> pvar ~loc (Helpers.arg i))
                                          args))
                              in
-                             Exp.case (pconstruct p pat_arg)
+                             let exp =
                                [%expr
-                                 `O
+                                 [%e runtime_module ~loc "obj"]
                                    [
                                      ( [%e estring ~loc name],
-                                       `A
+                                       [%e runtime_module ~loc "list"]
                                          [%e
                                            elist ~loc
                                              (List.mapi
@@ -893,6 +945,8 @@ module Make (B : Backend) = struct
                                                           (Helpers.arg i)]])
                                                 args)] );
                                    ]]
+                             in
+                             Exp.case (pconstruct p pat_arg) exp
                          | _ -> failwith "Not implemented!")
                        constructors
                    in

@@ -20,7 +20,7 @@ type v = int[@@deriving yaml]
 include
   struct
     let _ = fun (_ : v) -> ()
-    let v_to_yaml (x : int) = `Float (float_of_int x)
+    let v_to_yaml (x : int) = Ppx_deriving_yaml_runtime.int x
     let _ = v_to_yaml
     let v_of_yaml =
       function

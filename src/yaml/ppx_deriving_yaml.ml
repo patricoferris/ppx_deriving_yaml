@@ -32,6 +32,18 @@ module Backend = struct
         Ast_pattern.(single_expr_payload __)
         (fun x -> x)
   end
+
+  module Pattern = struct
+    open Ast_builder.Default
+
+    let int ~loc i_pat = ppat_variant ~loc "Float" (Some i_pat)
+    let float ~loc f = ppat_variant ~loc "Float" (Some f)
+    let string ~loc s = ppat_variant ~loc "String" (Some s)
+    let bool ~loc b = ppat_variant ~loc "Bool" (Some b)
+    let list ~loc l = ppat_variant ~loc "A" (Some l)
+    let obj ~loc b = ppat_variant ~loc "O" (Some b)
+    let null ~loc = ppat_variant ~loc "Null" None
+  end
 end
 
 module Value = Ppx_deriving_yaml_common.Make (Backend)

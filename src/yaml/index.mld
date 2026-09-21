@@ -19,15 +19,11 @@ the prefix to the [to_yaml] function.
 
 [of_yaml] produces OCaml types wrapped in a {! Stdlib.result}.
 
-{@ocaml[
-# #require "ppx_deriving_yaml";;
-]}
-
 Here is a small example.
 
 {@ocaml[
-type person = { name : string; age : int } [@@deriving yaml]
-type users = person list [@@deriving yaml]
+# type person = { name : string; age : int } [@@deriving yaml]
+# type users = person list [@@deriving yaml]
 ]}
 
 This will produce four functions, a [_to_yaml] and [_of_yaml] for both a person and

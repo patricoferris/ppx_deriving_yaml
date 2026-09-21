@@ -5,9 +5,15 @@ include
   struct
     let var_to_ezjsonm =
       function
-      | Hello -> `O [("Hello", (`A []))]
+      | Hello ->
+          Ppx_deriving_ezjsonm_runtime.obj
+            [("Hello", (Ppx_deriving_ezjsonm_runtime.list []))]
       | World arg0 ->
-          `O [("World", (`A [((fun (x : string) -> `String x)) arg0]))]
+          Ppx_deriving_ezjsonm_runtime.obj
+            [("World",
+               (Ppx_deriving_ezjsonm_runtime.list
+                  [((fun (x : string) ->
+                       Ppx_deriving_ezjsonm_runtime.string x)) arg0]))]
     let var_of_ezjsonm =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
@@ -28,10 +34,14 @@ include
   struct
     let poly_var_to_ezjsonm =
       function
-      | `Hello -> `O [("Hello", (`A []))]
+      | `Hello ->
+          Ppx_deriving_ezjsonm_runtime.obj
+            [("Hello", (Ppx_deriving_ezjsonm_runtime.list []))]
       | `World x ->
-          ((fun (x : string) -> `String x) x) |>
-            ((fun x -> `O [("World", (`A [x]))]))
+          ((fun (x : string) -> Ppx_deriving_ezjsonm_runtime.string x) x) |>
+            ((fun x ->
+                Ppx_deriving_ezjsonm_runtime.obj
+                  [("World", (Ppx_deriving_ezjsonm_runtime.list [x]))]))
     let poly_var_of_ezjsonm =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
@@ -51,13 +61,18 @@ type a = {
 include
   struct
     let a_to_ezjsonm (x : a) =
-      `O
+      Ppx_deriving_ezjsonm_runtime.obj
         (Stdlib.List.filter_map (fun x -> x)
            [Some
               ("x",
                 (((function
-                   | `Simple -> `O [("Simple", (`A []))]
-                   | `Example -> `O [("Example", (`A []))])) x.x))])
+                   | `Simple ->
+                       Ppx_deriving_ezjsonm_runtime.obj
+                         [("Simple", (Ppx_deriving_ezjsonm_runtime.list []))]
+                   | `Example ->
+                       Ppx_deriving_ezjsonm_runtime.obj
+                         [("Example", (Ppx_deriving_ezjsonm_runtime.list []))]))
+                   x.x))])
     let a_of_ezjsonm =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
@@ -88,15 +103,19 @@ type t = {
 include
   struct
     let to_ezjsonm (x : t) =
-      `O
+      Ppx_deriving_ezjsonm_runtime.obj
         (Stdlib.List.filter_map (fun x -> x)
-           [Some ("name", (((fun (x : string) -> `String x)) x.name));
+           [Some
+              ("name",
+                (((fun (x : string) -> Ppx_deriving_ezjsonm_runtime.string x))
+                   x.name));
            Some
              ("age",
                (((function
-                  | None -> `Null
-                  | Some t -> ((fun (x : int) -> `Float (float_of_int x))) t))
-                  x.age))])
+                  | None -> Ppx_deriving_ezjsonm_runtime.null
+                  | Some t ->
+                      ((fun (x : int) -> Ppx_deriving_ezjsonm_runtime.int x))
+                        t)) x.age))])
     let of_ezjsonm =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
@@ -144,12 +163,16 @@ type u = {
 include
   struct
     let u_to_ezjsonm (x : u) =
-      `O
+      Ppx_deriving_ezjsonm_runtime.obj
         (Stdlib.List.filter_map (fun x -> x)
            [((fun x ->
                 if Stdlib.(=) x "Una"
                 then None
-                else Some ("name", (((fun (x : string) -> `String x)) x))))
+                else
+                  Some
+                    ("name",
+                      (((fun (x : string) ->
+                           Ppx_deriving_ezjsonm_runtime.string x)) x))))
               x.name])
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
 type v = {
@@ -185,7 +208,7 @@ type w = {
 include
   struct
     let w_to_ezjsonm (x : w) =
-      `O
+      Ppx_deriving_ezjsonm_runtime.obj
         (Stdlib.List.filter_map (fun x -> x)
            [Some ("age", (((fun i -> `Float (float_of_int (i - 10)))) x.age))])
     let w_of_ezjsonm =
@@ -221,10 +244,12 @@ type x =
 include
   struct
     let x_to_ezjsonm (x : x) =
-      `O
+      Ppx_deriving_ezjsonm_runtime.obj
         (Stdlib.List.filter_map (fun x -> x)
            [Some
-              ("age", (((fun (x : int) -> `Float (float_of_int x))) x.age))])
+              ("age",
+                (((fun (x : int) -> Ppx_deriving_ezjsonm_runtime.int x))
+                   x.age))])
     let x_of_ezjsonm =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
