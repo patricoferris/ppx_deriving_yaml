@@ -1,5 +1,8 @@
 ## unrelease YYYY-MM-DD <loc>
 
+- Add [YAMLx](https://mjambon.github.io/yamlx/yamlx/YAMLx/) backend (#65,
+  @raphael-proust, @patricoferris)
+
 ### Bug fixes
 
 - Encoding and decoding logic was completely broken for `_ array` types (#64,

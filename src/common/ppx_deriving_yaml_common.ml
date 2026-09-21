@@ -531,7 +531,7 @@ module Make (B : Backend) = struct
             B.Pattern.obj_case ~loc ~key:(pstring ~loc name)
               ~value:(B.Pattern.list ~loc args)
           in
-          B.Pattern.obj ~loc [%pat? [ [%p args ] ] ]
+          B.Pattern.obj ~loc [%pat? [ [%p args] ]]
         in
         let cases =
           List.map
@@ -828,7 +828,7 @@ module Make (B : Backend) = struct
                                              pvar ~loc (Helpers.arg i))
                                            args))
                              in
-                             B.Pattern.obj ~loc [%pat? [ [%p args ] ] ]
+                             B.Pattern.obj ~loc [%pat? [ [%p args] ]]
                            in
                            Exp.case exp
                              (monad_fold

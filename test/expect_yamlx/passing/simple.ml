@@ -5,7 +5,10 @@ type t = { name : string; age : int option } [@@deriving yamlx]
 type u = { name : string [@default "Una"] } [@@deriving to_yamlx]
 type v = { age : int [@key "AGE"] [@default 10] } [@@deriving of_yamlx]
 
-type w = { age : int [@to_yamlx fun i -> YAMLx.Int (YAMLx.zero_loc, Int64.of_int (i - 10))] }
+type w = {
+  age : int;
+      [@to_yamlx fun i -> YAMLx.Int (YAMLx.zero_loc, Int64.of_int (i - 10))]
+}
 [@@deriving yamlx]
 
 type x = {
