@@ -268,3 +268,30 @@ include
       | _ ->
           Error (`Msg "Failed building a key-value object expecting a list")
   end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type arr = int array[@@deriving yaml]
+include
+  struct
+    let arr_to_yaml x =
+      Ppx_deriving_yaml_runtime.list
+        (Array.to_list
+           (Array.map (fun (x : int) -> Ppx_deriving_yaml_runtime.int x) x))
+    let arr_of_yaml =
+      function
+      | `A lst ->
+          let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e in
+          ((fun f lst ->
+              (Stdlib.List.fold_left
+                 (fun acc x ->
+                    match acc with
+                    | Stdlib.Ok acc ->
+                        (f x) >>= ((fun x -> Stdlib.Ok (x :: acc)))
+                    | Stdlib.Error e -> Stdlib.Error e) (Stdlib.Ok []) lst)
+                >>= (fun lst -> Stdlib.Ok (Stdlib.List.rev lst)))
+             (function
+              | `Float x -> Ok (int_of_float x)
+              | _ ->
+                  Error (`Msg "Was expecting 'int' but got a different type"))
+             lst)
+            >>= ((fun lst -> Ok (Array.of_list lst)))
+      | _ -> Error (`Msg "Was expecting 'array' but got a different type")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]

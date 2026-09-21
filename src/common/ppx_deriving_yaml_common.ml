@@ -146,7 +146,7 @@ module Make (B : Backend) = struct
         [%expr
           fun x ->
             [%e runtime_module ~loc "list"]
-              Array.(to_list (map [%e type_to_expr typ]) x)]
+              (Array.to_list (Array.map [%e type_to_expr typ] x))]
     | [%type: [%t? typ] option] ->
         [%expr
           function
@@ -454,7 +454,7 @@ module Make (B : Backend) = struct
                 in
                 [%e Helpers.map_bind ~loc]
                   [%e of_backend_type_to_expr None typ]
-                  [%e pexp_ident ~loc { txt = Lident "lst"; loc }]] );
+                  lst] );
           ]
           "list"
     | [%type: [%t? typ] array] ->
@@ -466,10 +466,10 @@ module Make (B : Backend) = struct
                 let ( >>= ) v f =
                   match v with Ok v -> f v | Error _ as e -> e
                 in
-                [%e runtime_module ~loc "list"]
-                  Array.(
-                    to_list ([%e Helpers.map_bind ~loc] [%e type_to_expr typ]))]
-            );
+                [%e Helpers.map_bind ~loc]
+                  [%e of_backend_type_to_expr None typ]
+                  lst
+                >>= fun lst -> Ok (Array.of_list lst)] );
           ]
           "array"
     | [%type: [%t? typ] option] ->
