@@ -24,7 +24,7 @@ include
     let _ = v_to_ezjsonm
     let v_of_ezjsonm =
       function
-      | `Float x -> Ok (int_of_float x)
+      | `Float x -> Ok (Ppx_deriving_ezjsonm_runtime.of_integer x)
       | _ -> Error (`Msg "Was expecting 'int' but got a different type")
     let _ = v_of_ezjsonm
   end[@@ocaml.doc "@inline"][@@merlin.hide ]

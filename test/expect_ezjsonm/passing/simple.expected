@@ -79,20 +79,23 @@ include
       function
       | `O xs ->
           let rec loop xs (arg0 as _state) =
-            match xs with
-            | ("x", x)::xs ->
-                loop xs
-                  ((let (>>=) v f =
-                      match v with | Ok v -> f v | Error _ as e -> e[@@warning
-                                                                    "-26"] in
-                    function
-                    | `O (("Simple", `A [])::[]) -> Stdlib.Result.Ok `Simple
-                    | `O (("Example", `A [])::[]) ->
-                        Stdlib.Result.Ok `Example
-                    | _ -> Error (`Msg "failed converting variant")) x)
-            | [] -> arg0 >>= ((fun arg0 -> Ok { x = arg0 }))
-            | (x, _y)::_ ->
-                Error (`Msg ("Failed to find the case for: " ^ x)) in
+            ((match xs with
+              | ("x", x)::xs ->
+                  loop xs
+                    ((let (>>=) v f =
+                        match v with | Ok v -> f v | Error _ as e -> e
+                        [@@warning "-26"] in
+                      function
+                      | `O (("Simple", `A [])::[]) ->
+                          Stdlib.Result.Ok `Simple
+                      | `O (("Example", `A [])::[]) ->
+                          Stdlib.Result.Ok `Example
+                      | _ -> Error (`Msg "failed converting variant")) x)
+              | [] -> arg0 >>= ((fun arg0 -> Ok { x = arg0 }))
+              | (x, _)::_ ->
+                  Error (`Msg ("Failed to find the case for: " ^ x))
+              | _ -> Error (`Msg "Malformed key-value pairs"))
+            [@warning "-11"]) in
           loop xs (Error (`Msg "Didn't find the function for key: x"))
       | _ ->
           Error (`Msg "Failed building a key-value object expecting a list")
@@ -122,36 +125,41 @@ include
       function
       | `O xs ->
           let rec loop xs ((arg0, arg1) as _state) =
-            match xs with
-            | ("name", x)::xs ->
-                loop xs
-                  (((function
-                     | `String x -> Ok x
-                     | _ ->
-                         Error
-                           (`Msg
-                              "Was expecting 'string' but got a different type"))
-                      x), arg1)
-            | ("age", x)::xs ->
-                loop xs
-                  (arg0,
-                    ((function
-                      | `Null -> Ok None
-                      | x ->
-                          ((function
-                            | `Float x -> Ok (int_of_float x)
-                            | _ ->
-                                Error
-                                  (`Msg
-                                     "Was expecting 'int' but got a different type"))
-                             x)
-                            >>= ((fun x -> Ok (Some x)))) x))
-            | [] ->
-                arg1 >>=
-                  ((fun arg1 ->
-                      arg0 >>= (fun arg0 -> Ok { name = arg0; age = arg1 })))
-            | (x, _y)::_ ->
-                Error (`Msg ("Failed to find the case for: " ^ x)) in
+            ((match xs with
+              | ("name", x)::xs ->
+                  loop xs
+                    (((function
+                       | `String x -> Ok x
+                       | _ ->
+                           Error
+                             (`Msg
+                                "Was expecting 'string' but got a different type"))
+                        x), arg1)
+              | ("age", x)::xs ->
+                  loop xs
+                    (arg0,
+                      ((function
+                        | `Null -> Ok None
+                        | x ->
+                            ((function
+                              | `Float x ->
+                                  Ok
+                                    (Ppx_deriving_ezjsonm_runtime.of_integer
+                                       x)
+                              | _ ->
+                                  Error
+                                    (`Msg
+                                       "Was expecting 'int' but got a different type"))
+                               x)
+                              >>= ((fun x -> Ok (Some x)))) x))
+              | [] ->
+                  arg1 >>=
+                    ((fun arg1 ->
+                        arg0 >>= (fun arg0 -> Ok { name = arg0; age = arg1 })))
+              | (x, _)::_ ->
+                  Error (`Msg ("Failed to find the case for: " ^ x))
+              | _ -> Error (`Msg "Malformed key-value pairs"))
+            [@warning "-11"]) in
           loop xs
             ((Error (`Msg "Didn't find the function for key: name")),
               (Ok None))
@@ -185,19 +193,22 @@ include
       function
       | `O xs ->
           let rec loop xs (arg0 as _state) =
-            match xs with
-            | ("AGE", x)::xs ->
-                loop xs
-                  ((function
-                    | `Float x -> Ok (int_of_float x)
-                    | _ ->
-                        Error
-                          (`Msg
-                             "Was expecting 'int' but got a different type"))
-                     x)
-            | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
-            | (x, _y)::_ ->
-                Error (`Msg ("Failed to find the case for: " ^ x)) in
+            ((match xs with
+              | ("AGE", x)::xs ->
+                  loop xs
+                    ((function
+                      | `Float x ->
+                          Ok (Ppx_deriving_ezjsonm_runtime.of_integer x)
+                      | _ ->
+                          Error
+                            (`Msg
+                               "Was expecting 'int' but got a different type"))
+                       x)
+              | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
+              | (x, _)::_ ->
+                  Error (`Msg ("Failed to find the case for: " ^ x))
+              | _ -> Error (`Msg "Malformed key-value pairs"))
+            [@warning "-11"]) in
           loop xs (Ok 10)
       | _ ->
           Error (`Msg "Failed building a key-value object expecting a list")
@@ -217,19 +228,22 @@ include
       function
       | `O xs ->
           let rec loop xs (arg0 as _state) =
-            match xs with
-            | ("age", x)::xs ->
-                loop xs
-                  ((function
-                    | `Float x -> Ok (int_of_float x)
-                    | _ ->
-                        Error
-                          (`Msg
-                             "Was expecting 'int' but got a different type"))
-                     x)
-            | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
-            | (x, _y)::_ ->
-                Error (`Msg ("Failed to find the case for: " ^ x)) in
+            ((match xs with
+              | ("age", x)::xs ->
+                  loop xs
+                    ((function
+                      | `Float x ->
+                          Ok (Ppx_deriving_ezjsonm_runtime.of_integer x)
+                      | _ ->
+                          Error
+                            (`Msg
+                               "Was expecting 'int' but got a different type"))
+                       x)
+              | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
+              | (x, _)::_ ->
+                  Error (`Msg ("Failed to find the case for: " ^ x))
+              | _ -> Error (`Msg "Malformed key-value pairs"))
+            [@warning "-11"]) in
           loop xs (Error (`Msg "Didn't find the function for key: age"))
       | _ ->
           Error (`Msg "Failed building a key-value object expecting a list")
@@ -256,15 +270,17 @@ include
       function
       | `O xs ->
           let rec loop xs (arg0 as _state) =
-            match xs with
-            | ("age", x)::xs ->
-                loop xs
-                  ((function
-                    | `Float f -> Ok (int_of_float (f +. 10.))
-                    | _ -> Error (`Msg "Expected a Yaml `Float")) x)
-            | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
-            | (x, _y)::_ ->
-                Error (`Msg ("Failed to find the case for: " ^ x)) in
+            ((match xs with
+              | ("age", x)::xs ->
+                  loop xs
+                    ((function
+                      | `Float f -> Ok (int_of_float (f +. 10.))
+                      | _ -> Error (`Msg "Expected a Yaml `Float")) x)
+              | [] -> arg0 >>= ((fun arg0 -> Ok { age = arg0 }))
+              | (x, _)::_ ->
+                  Error (`Msg ("Failed to find the case for: " ^ x))
+              | _ -> Error (`Msg "Malformed key-value pairs"))
+            [@warning "-11"]) in
           loop xs (Error (`Msg "Didn't find the function for key: age"))
       | _ ->
           Error (`Msg "Failed building a key-value object expecting a list")

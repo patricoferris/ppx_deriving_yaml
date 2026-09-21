@@ -42,6 +42,7 @@ module Backend = struct
     let bool ~loc b = ppat_variant ~loc "Bool" (Some b)
     let list ~loc l = ppat_variant ~loc "A" (Some l)
     let obj ~loc b = ppat_variant ~loc "O" (Some b)
+    let obj_case ~loc ~key ~value = ppat_tuple ~loc [ key; value ]
     let null ~loc = ppat_variant ~loc "Null" None
   end
 end

@@ -21,47 +21,49 @@ include
       function
       | `O xs ->
           let rec loop xs ((arg0, arg1) as _state) =
-            match xs with
-            | ("name", x)::xs ->
-                loop xs
-                  (((function
-                     | `String x -> Ok x
-                     | _ ->
-                         Error
-                           (`Msg
-                              "Was expecting 'string' but got a different type"))
-                      x), arg1)
-            | ("children", x)::xs ->
-                loop xs
-                  (arg0,
-                    ((function
-                      | `A lst ->
-                          let (>>=) v f =
-                            match v with | Ok v -> f v | Error _ as e -> e in
-                          ((fun f lst ->
-                              (Stdlib.List.fold_left
-                                 (fun acc x ->
-                                    match acc with
-                                    | Stdlib.Ok acc ->
-                                        (f x) >>=
-                                          ((fun x -> Stdlib.Ok (x :: acc)))
-                                    | Stdlib.Error e -> Stdlib.Error e)
-                                 (Stdlib.Ok []) lst)
-                                >>=
-                                (fun lst -> Stdlib.Ok (Stdlib.List.rev lst))))
-                            (fun x -> of_yaml x) lst
-                      | _ ->
-                          Error
-                            (`Msg
-                               "Was expecting 'list' but got a different type"))
-                       x))
-            | [] ->
-                arg1 >>=
-                  ((fun arg1 ->
-                      arg0 >>=
-                        (fun arg0 -> Ok { name = arg0; children = arg1 })))
-            | (x, _y)::_ ->
-                Error (`Msg ("Failed to find the case for: " ^ x)) in
+            ((match xs with
+              | ("name", x)::xs ->
+                  loop xs
+                    (((function
+                       | `String x -> Ok x
+                       | _ ->
+                           Error
+                             (`Msg
+                                "Was expecting 'string' but got a different type"))
+                        x), arg1)
+              | ("children", x)::xs ->
+                  loop xs
+                    (arg0,
+                      ((function
+                        | `A lst ->
+                            let (>>=) v f =
+                              match v with | Ok v -> f v | Error _ as e -> e in
+                            ((fun f lst ->
+                                (Stdlib.List.fold_left
+                                   (fun acc x ->
+                                      match acc with
+                                      | Stdlib.Ok acc ->
+                                          (f x) >>=
+                                            ((fun x -> Stdlib.Ok (x :: acc)))
+                                      | Stdlib.Error e -> Stdlib.Error e)
+                                   (Stdlib.Ok []) lst)
+                                  >>=
+                                  (fun lst -> Stdlib.Ok (Stdlib.List.rev lst))))
+                              (fun x -> of_yaml x) lst
+                        | _ ->
+                            Error
+                              (`Msg
+                                 "Was expecting 'list' but got a different type"))
+                         x))
+              | [] ->
+                  arg1 >>=
+                    ((fun arg1 ->
+                        arg0 >>=
+                          (fun arg0 -> Ok { name = arg0; children = arg1 })))
+              | (x, _)::_ ->
+                  Error (`Msg ("Failed to find the case for: " ^ x))
+              | _ -> Error (`Msg "Malformed key-value pairs"))
+            [@warning "-11"]) in
           loop xs
             ((Error (`Msg "Didn't find the function for key: name")),
               (Error (`Msg "Didn't find the function for key: children")))

@@ -88,6 +88,7 @@ module type Backend = sig
     val bool : loc:Location.t -> pattern -> pattern
     val list : loc:Location.t -> pattern -> pattern
     val obj : loc:Location.t -> pattern -> pattern
+    val obj_case : loc:Location.t -> key:pattern -> value:pattern -> pattern
     val null : loc:Location.t -> pattern
   end
 end
@@ -413,7 +414,8 @@ module Make (B : Backend) = struct
         mk_pat_match ~loc
           [
             ( [%pat? [%p B.Pattern.int ~loc argument]],
-              [%expr Ok (int_of_float [%e expr_arg])] );
+              [%expr Ok ([%e runtime_module ~loc "of_integer"] [%e expr_arg])]
+            );
           ]
           "int"
     | [%type: float] ->
@@ -671,8 +673,12 @@ module Make (B : Backend) = struct
                 else evar ~loc (arg j))
               fields
           in
+          let key =
+            B.Pattern.obj_case ~loc ~key:(pstring ~loc name)
+              ~value:(ppat_var ~loc { txt = "x"; loc })
+          in
           Exp.case
-            [%pat? ([%p pstring ~loc name], x) :: xs]
+            [%pat? [%p key] :: xs]
             [%expr loop xs [%e Helpers.etuple ~loc funcs]])
         fields
     in
@@ -682,10 +688,19 @@ module Make (B : Backend) = struct
           Exp.case [%pat? []] base_case;
           (if skip_unknown then Exp.case [%pat? _ :: xs] [%expr loop xs _state]
            else
+             let last =
+               B.Pattern.obj_case ~loc
+                 ~key:(ppat_var ~loc { txt = "x"; loc })
+                 ~value:(ppat_any ~loc)
+             in
              Exp.case
-               [%pat? (x, _y) :: _]
+               [%pat? [%p last] :: _]
                [%expr Error (`Msg ("Failed to find the case for: " ^ x))]);
         ]
+      @
+      if skip_unknown then []
+      else
+        [ Exp.case [%pat? _] [%expr Error (`Msg "Malformed key-value pairs")] ]
     in
     let option_to_none t =
       match Attribute.get B.Attrs.default t with
@@ -702,6 +717,15 @@ module Make (B : Backend) = struct
           )
       | Some default -> [%expr Ok [%e default]]
     in
+    (* On the YAMLx backend we need a catch all case, for whenever non-string values are used
+       as keys. With Ezjsonm and Yaml this will be a redundant case, so we disable that warning. *)
+    let attrs =
+      let v = pstr_eval ~loc (estring ~loc "-11") [] in
+      [
+        attribute ~loc ~name:{ txt = "warning"; loc }
+          ~payload:(Ppxlib.PStr [ v ]);
+      ]
+    in
     let e =
       [%expr
         function
@@ -711,7 +735,7 @@ module Make (B : Backend) = struct
                    Helpers.ptuple ~loc
                      (List.mapi (fun i _ -> pvar ~loc (arg i)) fields)] as
                  _state) =
-              [%e Exp.match_ [%expr xs] kv_cases]
+              [%e Exp.match_ ~attrs [%expr xs] kv_cases]
             in
             loop xs
               [%e

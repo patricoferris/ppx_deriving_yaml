@@ -22,6 +22,7 @@ module type Backend = sig
     val bool : loc:Location.t -> pattern -> pattern
     val list : loc:Location.t -> pattern -> pattern
     val obj : loc:Location.t -> pattern -> pattern
+    val obj_case : loc:Location.t -> key:pattern -> value:pattern -> pattern
     val null : loc:Location.t -> pattern
   end
 end

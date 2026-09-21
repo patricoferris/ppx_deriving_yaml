@@ -12,7 +12,7 @@
  (name ppx_deriving_yaml_runtime)
  (public_name ppx_deriving_yaml.runtime)
  (modules ppx_deriving_yaml_runtime)
- (libraries yaml))
+ (libraries ppx_deriving_yaml.types yaml))
 
 ;(mdx
 ; (files index.mld)

@@ -1,0 +1,177 @@
+{0 Deriving Yaml}
+
+This ppx is based on {{: https://github.com/NathanReb/ppx_yojson} ppx_yojson}
+and {{: https://github.com/ocaml-ppx/ppx_deriving_yojson} ppx_deriving_yojson}
+because of the many similarities between JSON and yaml.
+
+{1 Basic Usage}
+
+For converting OCaml values to Yaml values [ppx_deriving_yamlx] will do the
+conventional dropping of the type name if it is [t]. Otherwise the type name is
+the prefix to the [to_yamlx] function.
+
+[to_yamlx] produces a {! YAMLx.value}.
+
+[of_yamlx] produces OCaml types wrapped in a {! Stdlib.result}.
+
+Here is a small example.
+
+{@ocaml[
+# type person = { name : string; age : int } [@@deriving yamlx]
+type person = { name : string; age : int; }
+val person_to_yamlx : person -> YAMLx.value = <fun>
+val person_of_yamlx : YAMLx.value -> (person, [> `Msg of string ]) result =
+  <fun>
+# type users = person list [@@deriving yamlx]
+type users = person list
+val users_to_yamlx : person list -> YAMLx.value = <fun>
+val users_of_yamlx : YAMLx.value -> (person list, [> `Msg of string ]) result =
+  <fun>
+]}
+
+This will produce four functions, a [_to_yamlx] and [_of_yamlx] for both a person and
+the users. For example:
+
+{@ocaml[
+# person_to_yamlx;;
+- : person -> YAMLx.value = <fun>
+# users_of_yamlx;;
+- : YAMLx.value -> (person list, [> `Msg of string ]) result = <fun>
+]}
+
+If your type constructors have arguments, then the functions will be
+higher-order and you will need to supply a function to convert values for each
+constructor argument. For example:
+
+{@ocaml[
+type 'a note = { txt : 'a } [@@deriving yamlx]
+]}
+
+produces the following function.
+
+{@ocaml[
+# note_to_yamlx;;
+- : ('a -> YAMLx.value) -> 'a note -> YAMLx.value = <fun>
+]}
+
+Finally, if you only need the encoder ([to_yamlx]) or the decoder ([of_yamlx]) then there are single versions of the deriver for those.
+
+{@ocaml[
+# type x = { age : int }[@@deriving to_yamlx];;
+type x = { age : int; }
+val x_to_yamlx : x -> YAMLx.value = <fun>
+]}
+
+{1 Attributes}
+
+{2 Key and Name}
+
+Record field names cannot begin with a capital letter and variant constructors
+must start with one. This limits what the generated Yaml can look like. To
+override the Yaml names you can use the [[@key <string>]] and [[@name
+<string>]] attributes for records and variants respectively.
+
+{@ocaml[
+# type t = {
+    camel_name : string [@key "camel-name"]
+  }[@@deriving to_yamlx];;
+type t = { camel_name : string; }
+val to_yamlx : t -> YAMLx.value = <fun>
+
+# YAMLx.Value.to_yaml (to_yamlx { camel_name = "Alice" });;
+- : string = "camel-name: Alice\n"
+]}
+
+{2 Default Values}
+
+You can also specify default values for fields.
+
+{@ocaml[
+type t = {
+  name : string;
+  age : int [@default 42]
+}[@@deriving yamlx]
+]}
+
+These will be used in the absence of any fields when decoding Yaml values into OCaml ones.
+
+{@ocaml[
+# YAMLx.Value.of_yaml_exn "name: Alice" |> of_yamlx;;
+- : (t, [> `Msg of string ]) result = Ok {name = "Alice"; age = 42}
+]}
+
+{2 Custom encoding and decoding}
+
+Sometimes you might want to specify your own encoding and decoding logic on field
+by field basis. To do so, you can use the [of_yamlx] and [to_yamlx] attributes.
+
+{@ocaml[
+type t = {
+  name : string [@to_yamlx fun i -> YAMLx.String (YAMLx.zero_loc, ("custom-" ^ i))]
+}[@@deriving yamlx]
+]}
+
+The [to_yamlx] function will use the custom encoder now instead.
+
+{@ocaml[
+# YAMLx.Value.to_yaml (to_yamlx { name = "alice" });;
+- : string = "name: custom-alice\n"
+]}
+
+{1 Partially Decoding}
+
+There is a [~skip_unknown] flag for telling the deriver to simply ignore any
+fields which are missing. This is particularly useful when you only wish to
+partially decode a yaml value.
+
+Consider the following yaml:
+
+{@ocaml[
+let yaml = "name: Bob\nage: 42\nmisc: We don't need this!"
+]}
+
+If we try to do the normal decoding of this but only partially extract the fields, it will throw an error.
+
+{@ocaml[
+# type t = {
+    name : string;
+    age : int;
+  }[@@deriving of_yamlx];;
+type t = { name : string; age : int; }
+val of_yamlx : YAMLx.value -> (t, [> `Msg of string ]) result = <fun>
+
+# YAMLx.Value.of_yaml_exn yaml |> of_yamlx;;
+- : (t, [> `Msg of string ]) result =
+Error (`Msg "Failed to find the case for: misc")
+]}
+
+Instead we tell the deriver to ignore unknown fields.
+
+{@ocaml[
+type t = {
+  name : string;
+  age : int;
+}[@@deriving of_yamlx ~skip_unknown]
+]}
+
+{@ocaml[
+# YAMLx.Value.of_yaml_exn yaml |> of_yamlx;;
+- : (t, [> `Msg of string ]) result = Ok {name = "Bob"; age = 42}
+]}
+
+{1 Implementation Details}
+
+One important thing is that ['a option] values within records will return [None] if the Yaml you are trying to convert does not exist.
+
+{table
+{tr {th OCaml Type}{th Yamlx Type}}
+{tr {td [int]}{td {! YAMLx.Int}}}
+{tr {td [float]}{td {! YAMLx.Float}}}
+{tr {td [string]}{td {! YAMLx.String}}}
+{tr {td [bool]}{td {! YAMLx.Bool }}}
+{tr {td [None]}{td {! YAMLx.Null }}}
+{tr {td [list]}{td {! YAMLx.Seq}}}
+{tr {td [array]}{td {! YAMLx.Seq}}}
+{tr {td [record] e.g [{ name : string }]}{td [YAMLx.Map [(_, YAMLx.String (_ ,"name"), YAMLx.String (_, s))]]}}
+{tr {td [A of int] or [ [`A of int]]}{td [YAMLx.Map [(_, YAMLx.String (_, "A"), YAMLx.Seq (_, [ YAMLx.Float (_, f)]))]]}}
+}
