@@ -16,3 +16,5 @@ type x = {
         | _ -> Error (`Msg "Expected a Yaml `Float")]
 }
 [@@deriving yaml]
+
+type arr = int array [@@deriving yaml]

@@ -4,12 +4,17 @@ type t = {
 include
   struct
     let rec to_yaml (x : t) =
-      `O
+      Ppx_deriving_yaml_runtime.obj
         (Stdlib.List.filter_map (fun x -> x)
-           [Some ("name", (((fun (x : string) -> `String x)) x.name));
+           [Some
+              ("name",
+                (((fun (x : string) -> Ppx_deriving_yaml_runtime.string x))
+                   x.name));
            Some
              ("children",
-               (((fun x -> `A (List.map (fun x -> to_yaml x) x))) x.children))])
+               (((fun x ->
+                    Ppx_deriving_yaml_runtime.list
+                      (List.map (fun x -> to_yaml x) x))) x.children))])
     let rec of_yaml =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in

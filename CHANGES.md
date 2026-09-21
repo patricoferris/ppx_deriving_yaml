@@ -1,3 +1,10 @@
+## unrelease YYYY-MM-DD <loc>
+
+### Bug fixes
+
+- Encoding and decoding logic was completely broken for `_ array` types (#64,
+  @patricoferris).
+
 ## v0.4.1 (20/06/2025) Paris
 
 - Update for latest ppxlib (#60, @patricoferris)

@@ -14,6 +14,16 @@ module type Backend = sig
     val to_ : (label_declaration, expression) Attribute.t
     val of_ : (label_declaration, expression) Attribute.t
   end
+
+  module Pattern : sig
+    val int : loc:Location.t -> pattern -> pattern
+    val float : loc:Location.t -> pattern -> pattern
+    val string : loc:Location.t -> pattern -> pattern
+    val bool : loc:Location.t -> pattern -> pattern
+    val list : loc:Location.t -> pattern -> pattern
+    val obj : loc:Location.t -> pattern -> pattern
+    val null : loc:Location.t -> pattern
+  end
 end
 
 module Make (_ : Backend) : sig

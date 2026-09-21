@@ -20,7 +20,7 @@ type v = int[@@deriving ezjsonm]
 include
   struct
     let _ = fun (_ : v) -> ()
-    let v_to_ezjsonm (x : int) = `Float (float_of_int x)
+    let v_to_ezjsonm (x : int) = Ppx_deriving_ezjsonm_runtime.int x
     let _ = v_to_ezjsonm
     let v_of_ezjsonm =
       function

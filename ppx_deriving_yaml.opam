@@ -10,7 +10,7 @@ tags: ["ppx" "deriver" "yaml"]
 homepage: "https://github.com/patricoferris/ppx_deriving_yaml"
 bug-reports: "https://github.com/patricoferris/ppx_deriving_yaml/issues"
 depends: [
-  "dune" {>= "3.14"}
+  "dune" {>= "3.21"}
   "yaml"
   "alcotest" {with-test}
   "mdx" {with-test & >= "2.4.1"}
@@ -34,3 +34,4 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/patricoferris/ppx_deriving_yaml.git"
+x-maintenance-intent: ["(latest)"]

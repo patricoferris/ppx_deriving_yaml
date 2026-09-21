@@ -3,14 +3,22 @@
  (public_name ppx_deriving_ezjsonm)
  (modules ppx_deriving_ezjsonm)
  (kind ppx_deriver)
- (libraries ppxlib ppx_deriving_ezjsonm.common)
- (ppx_runtime_libraries ezjsonm)
+ (libraries ppxlib ppx_deriving_ezjsonm.common ezjsonm)
+ (ppx_runtime_libraries ppx_deriving_ezjsonm.runtime)
  (preprocess
   (pps ppxlib.metaquot)))
+
+(library
+ (name ppx_deriving_ezjsonm_runtime)
+ (modules ppx_deriving_ezjsonm_runtime)
+ (public_name ppx_deriving_ezjsonm.runtime)
+ (libraries ezjsonm))
 
 (mdx
  (files index.mld)
  (package ppx_deriving_ezjsonm)
+ (deps
+  (package ppx_deriving_ezjsonm))
  (libraries ppxlib ppx_deriving_ezjsonm ezjsonm))
 
 (documentation
