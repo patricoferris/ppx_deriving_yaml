@@ -1,0 +1,53 @@
+type t = int -> int[@@deriving yamlx]
+include
+  struct
+    let _ = fun (_ : t) -> ()
+    let to_yamlx = [%ocaml.error "Functions cannot be converted yamlx"]
+    let _ = to_yamlx
+    let of_yamlx = [%ocaml.error "Functions cannot be converted yamlx"]
+    let _ = of_yamlx
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type u = int -> int[@@deriving yamlx]
+include
+  struct
+    let _ = fun (_ : u) -> ()
+    let u_to_yamlx = [%ocaml.error "Functions cannot be converted yamlx"]
+    let _ = u_to_yamlx
+    let u_of_yamlx = [%ocaml.error "Functions cannot be converted yamlx"]
+    let _ = u_of_yamlx
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type v = int[@@deriving yamlx]
+include
+  struct
+    let _ = fun (_ : v) -> ()
+    let v_to_yamlx (x : int) = Ppx_deriving_yamlx_runtime.int x
+    let _ = v_to_yamlx
+    let v_of_yamlx =
+      function
+      | YAMLx.Int (_, x) -> Ok (Ppx_deriving_yamlx_runtime.of_integer x)
+      | _ -> Error (`Msg "Was expecting 'int' but got a different type")
+    let _ = v_of_yamlx
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type w = ..[@@deriving yamlx]
+include
+  struct
+    let _ = fun (_ : w) -> ()
+    let error_encountered =
+      [%ocaml.error "Cannot derive anything for this type"]
+    let _ = error_encountered
+    let error = [%ocaml.error "Cannot derive anything for this type"]
+    let _ = error
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+type x[@@deriving yamlx]
+include
+  struct
+    let _ = fun (_ : x) -> ()
+    let error_encountered =
+      [%ocaml.error "Cannot derive anything for this type"]
+    let _ = error_encountered
+    let error_encountered =
+      [%ocaml.error
+        "Failed to derive something for an abstract type with no manifest!"]
+    let _ = error_encountered
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
+let _ = v_of_yamlx

@@ -1,0 +1,44 @@
+type t = {
+  name: string ;
+  age: int }[@@deriving of_yamlx ~skip_unknown]
+include
+  struct
+    let of_yamlx =
+      let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
+                                                                    "-26"] in
+      function
+      | YAMLx.Map (_, xs) ->
+          let rec loop xs ((arg0, arg1) as _state) =
+            ((match xs with
+              | (_, YAMLx.String (_, "name"), x)::xs ->
+                  loop xs
+                    (((function
+                       | YAMLx.String (_, x) -> Ok x
+                       | _ ->
+                           Error
+                             (`Msg
+                                "Was expecting 'string' but got a different type"))
+                        x), arg1)
+              | (_, YAMLx.String (_, "age"), x)::xs ->
+                  loop xs
+                    (arg0,
+                      ((function
+                        | YAMLx.Int (_, x) ->
+                            Ok (Ppx_deriving_yamlx_runtime.of_integer x)
+                        | _ ->
+                            Error
+                              (`Msg
+                                 "Was expecting 'int' but got a different type"))
+                         x))
+              | [] ->
+                  arg1 >>=
+                    ((fun arg1 ->
+                        arg0 >>= (fun arg0 -> Ok { name = arg0; age = arg1 })))
+              | _::xs -> loop xs _state)
+            [@warning "-11"]) in
+          loop xs
+            ((Error (`Msg "Didn't find the function for key: name")),
+              (Error (`Msg "Didn't find the function for key: age")))
+      | _ ->
+          Error (`Msg "Failed building a key-value object expecting a list")
+  end[@@ocaml.doc "@inline"][@@merlin.hide ]
