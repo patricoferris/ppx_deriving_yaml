@@ -1,0 +1,26 @@
+(library
+ (name ppx_deriving_yamlx)
+ (public_name ppx_deriving_yamlx)
+ (modules ppx_deriving_yamlx)
+ (kind ppx_deriver)
+ (libraries ppxlib ppx_deriving_yaml.common yamlx)
+ (ppx_runtime_libraries ppx_deriving_yamlx.runtime yamlx)
+ (preprocess
+  (pps ppxlib.metaquot)))
+
+(library
+ (name ppx_deriving_yamlx_runtime)
+ (public_name ppx_deriving_yamlx.runtime)
+ (modules ppx_deriving_yamlx_runtime)
+ (libraries ppx_deriving_yaml.types yamlx))
+
+(mdx
+ (files index.mld)
+ (package ppx_deriving_yamlx)
+ (deps
+  (package ppx_deriving_yamlx))
+ (preludes prelude.ml)
+ (libraries ppxlib ppx_deriving_yamlx))
+
+(documentation
+ (package ppx_deriving_yamlx))

@@ -1,30 +1,30 @@
 type t = {
   name: string ;
-  age: int }[@@deriving of_ezjsonm ~skip_unknown]
+  age: int }[@@deriving of_yamlx ~skip_unknown]
 include
   struct
-    let of_ezjsonm =
+    let of_yamlx =
       let (>>=) v f = match v with | Ok v -> f v | Error _ as e -> e[@@warning
                                                                     "-26"] in
       function
-      | `O xs ->
+      | YAMLx.Map (_, xs) ->
           let rec loop xs ((arg0, arg1) as _state) =
             ((match xs with
-              | ("name", x)::xs ->
+              | (_, YAMLx.String (_, "name"), x)::xs ->
                   loop xs
                     (((function
-                       | `String x -> Ok x
+                       | YAMLx.String (_, x) -> Ok x
                        | _ ->
                            Error
                              (`Msg
                                 "Was expecting 'string' but got a different type"))
                         x), arg1)
-              | ("age", x)::xs ->
+              | (_, YAMLx.String (_, "age"), x)::xs ->
                   loop xs
                     (arg0,
                       ((function
-                        | `Float x ->
-                            Ok (Ppx_deriving_ezjsonm_runtime.of_integer x)
+                        | YAMLx.Int (_, x) ->
+                            Ok (Ppx_deriving_yamlx_runtime.of_integer x)
                         | _ ->
                             Error
                               (`Msg

@@ -6,6 +6,11 @@
  (preprocess
   (pps ppxlib.metaquot)))
 
+(library
+ (name ppx_deriving_yaml_types)
+ (modules ppx_deriving_yaml_types)
+ (public_name ppx_deriving_yaml.types))
+
 (rule
  (alias default)
  (targets ppx_deriving_ezjsonm_common.ml ppx_deriving_ezjsonm_common.mli)
