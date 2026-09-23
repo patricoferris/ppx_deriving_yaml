@@ -22,7 +22,7 @@
   yaml
   (alcotest :with-test)
   (mdx (and :with-test (>= 2.4.1)))
-  (ppx_deriving :with-test) ; dune still puts this in META file ...
+  (ocamlformat (and :with-dev-setup (= 0.29.0)))
   (ocaml
    (>= 4.08.1))
   (ppxlib
@@ -38,7 +38,7 @@
   (yamlx (>= "0.5.0"))
   (alcotest :with-test)
   (mdx (and :with-test (>= 2.4.1)))
-  (ppx_deriving :with-test) ; dune still puts this in META file ...
+  (ocamlformat (and :with-dev-setup (= 0.29.0)))
   (ocaml
    (>= 4.08.1))
   (ppxlib
@@ -54,7 +54,7 @@
   ezjsonm
   (alcotest :with-test)
   (mdx (and :with-test (>= 2.4.1)))
-  (ppx_deriving :with-test) ; dune still puts this in META file ...
+  (ocamlformat (and :with-dev-setup (= 0.29.0)))
   (ocaml
    (>= 4.08.1))
   (ppxlib

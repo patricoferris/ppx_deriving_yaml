@@ -387,9 +387,9 @@ module Make (B : Backend) = struct
             [%expr
               Error
                 (`Msg
-                  [%e
-                    estring ~loc
-                      ("Was expecting '" ^ typ ^ "' but got a different type")])]
+                   [%e
+                     estring ~loc
+                       ("Was expecting '" ^ typ ^ "' but got a different type")])]
           );
         ]
     in
@@ -712,9 +712,9 @@ module Make (B : Backend) = struct
               [%expr
                 Error
                   (`Msg
-                    [%e
-                      estring ~loc
-                        ("Didn't find the function for key: " ^ t.pld_name.txt)])]
+                     [%e
+                       estring ~loc
+                         ("Didn't find the function for key: " ^ t.pld_name.txt)])]
           )
       | Some default -> [%expr Ok [%e default]]
     in
