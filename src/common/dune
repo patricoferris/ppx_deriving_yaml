@@ -11,6 +11,34 @@
  (modules ppx_deriving_yaml_types)
  (public_name ppx_deriving_yaml.types))
 
+; Copy types for other packages
+
+(rule
+ (alias default)
+ (targets ppx_deriving_ezjsonm_types.ml)
+ (deps ppx_deriving_yaml_types.ml)
+ (action
+  (progn
+   (copy ppx_deriving_yaml_types.ml ppx_deriving_ezjsonm_types.ml))))
+
+(rule
+ (alias default)
+ (targets ppx_deriving_yamlx_types.ml)
+ (deps ppx_deriving_yaml_types.ml)
+ (action
+  (progn
+   (copy ppx_deriving_yaml_types.ml ppx_deriving_yamlx_types.ml))))
+
+(library
+ (name ppx_deriving_yamlx_types)
+ (modules ppx_deriving_yamlx_types)
+ (public_name ppx_deriving_yamlx.types))
+
+(library
+ (name ppx_deriving_ezjsonm_types)
+ (modules ppx_deriving_ezjsonm_types)
+ (public_name ppx_deriving_ezjsonm.types))
+
 (rule
  (alias default)
  (targets ppx_deriving_ezjsonm_common.ml ppx_deriving_ezjsonm_common.mli)
@@ -20,10 +48,27 @@
    (copy ppx_deriving_yaml_common.ml ppx_deriving_ezjsonm_common.ml)
    (copy ppx_deriving_yaml_common.mli ppx_deriving_ezjsonm_common.mli))))
 
+(rule
+ (alias default)
+ (targets ppx_deriving_yamlx_common.ml ppx_deriving_yamlx_common.mli)
+ (deps ppx_deriving_yaml_common.ml ppx_deriving_yaml_common.mli)
+ (action
+  (progn
+   (copy ppx_deriving_yaml_common.ml ppx_deriving_yamlx_common.ml)
+   (copy ppx_deriving_yaml_common.mli ppx_deriving_yamlx_common.mli))))
+
 (library
  (name ppx_deriving_ezjsonm_common)
  (modules ppx_deriving_ezjsonm_common)
  (public_name ppx_deriving_ezjsonm.common)
+ (libraries ppxlib)
+ (preprocess
+  (pps ppxlib.metaquot)))
+
+(library
+ (name ppx_deriving_yamlx_common)
+ (modules ppx_deriving_yamlx_common)
+ (public_name ppx_deriving_yamlx.common)
  (libraries ppxlib)
  (preprocess
   (pps ppxlib.metaquot)))

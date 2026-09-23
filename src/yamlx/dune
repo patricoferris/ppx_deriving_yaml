@@ -3,7 +3,7 @@
  (public_name ppx_deriving_yamlx)
  (modules ppx_deriving_yamlx)
  (kind ppx_deriver)
- (libraries ppxlib ppx_deriving_yaml.common yamlx)
+ (libraries ppxlib ppx_deriving_yamlx.common yamlx)
  (ppx_runtime_libraries ppx_deriving_yamlx.runtime yamlx)
  (preprocess
   (pps ppxlib.metaquot)))
@@ -12,7 +12,7 @@
  (name ppx_deriving_yamlx_runtime)
  (public_name ppx_deriving_yamlx.runtime)
  (modules ppx_deriving_yamlx_runtime)
- (libraries ppx_deriving_yaml.types yamlx))
+ (libraries ppx_deriving_yamlx.types yamlx))
 
 (mdx
  (files index.mld)
