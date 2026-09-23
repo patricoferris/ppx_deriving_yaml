@@ -1,4 +1,4 @@
-## unrelease YYYY-MM-DD <loc>
+## v0.5.0 2026-09-23 Belfast
 
 - Add [YAMLx](https://mjambon.github.io/yamlx/yamlx/YAMLx/) backend (#65,
   @raphael-proust, @patricoferris)
