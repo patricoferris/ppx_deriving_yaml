@@ -68,7 +68,7 @@ module Backend = struct
   end
 end
 
-module Value = Ppx_deriving_yaml_common.Make (Backend)
+module Value = Ppx_deriving_yamlx_common.Make (Backend)
 
 let intf_generator intf = Deriving.Generator.V2.make_noarg intf
 
